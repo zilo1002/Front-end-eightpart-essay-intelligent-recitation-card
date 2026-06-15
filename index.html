@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端八股文 - 智能背诵卡片</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* 3D Card Flip */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        
+        /* Smooth transitions */
+        .card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Input styles */
+        .fill-blank {
+            border-bottom: 2px solid #e2e8f0;
+            background: transparent;
+            transition: all 0.3s;
+        }
+        .fill-blank:focus {
+            outline: none;
+            border-bottom-color: #3b82f6;
+        }
+        .fill-blank.correct {
+            border-bottom-color: #22c55e;
+            color: #15803d;
+        }
+        .fill-blank.wrong {
+            border-bottom-color: #ef4444;
+            color: #dc2626;
+        }
+        
+        /* Progress bar animation */
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .progress-pulse { animation: progressPulse 2s infinite; }
+        
+        /* Streak animation */
+        @keyframes streakPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .streak-pop { animation: streakPop 0.3s ease; }
+        
+        /* Code block styling */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+        
+        /* Hint reveal animation */
+        @keyframes hintReveal {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hint-animate { animation: hintReveal 0.3s ease; }
+        
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                    八
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-lg">前端八股文背诵卡</h1>
+                    <p class="text-xs text-slate-500">AI 辅助记忆 · 多模式训练</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="text-right hidden sm:block">
+                    <div class="text-xs text-slate-500 mb-1">今日进度</div>
+                    <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div id="totalProgress" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-200">
+                    <span class="text-lg">🔥</span>
+                    <span id="streakCount" class="font-bold text-orange-600">0</span>
+                    <span class="text-xs text-orange-500">连击</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 py-6 flex gap-6">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 hidden lg:block shrink-0">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sticky top-24">
+                <h3 class="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wider">知识分类</h3>
+                <nav class="space-y-1" id="categoryNav">
+                    <!-- Generated by JS -->
+                </nav>
+                
+                <div class="mt-6 pt-6 border-t border-slate-100">
+                    <h3 class="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wider">背诵模式</h3>
+                    <div class="space-y-2">
+                        <button onclick="setMode('flip')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors bg-blue-50 text-blue-700 font-medium" data-mode="flip">
+                            🔄 翻转卡片
+                        </button>
+                        <button onclick="setMode('fill')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="fill">
+                            ✏️ 填空挑战
+                        </button>
+                        <button onclick="setMode('write')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="write">
+                            📝 默写模式
+                        </button>
+                        <button onclick="setMode('choice')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="choice">
+                            🎯 选择测试
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0">
+            
+            <!-- Mobile Category Selector -->
+            <div class="lg:hidden mb-4 overflow-x-auto pb-2">
+                <div class="flex gap-2" id="mobileCategoryNav"></div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="statTotal">0</div>
+                    <div class="text-xs text-slate-500 mt-1">总卡片</div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <div class="text-2xl font-bold text-green-600" id="statMastered">0</div>
+                    <div class="text-xs text-slate-500 mt-1">已掌握</div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="statAccuracy">0%</div>
+                    <div class="text-xs text-slate-500 mt-1">正确率</div>
+                </div>
+            </div>
+
+            <!-- Card Container -->
+            <div class="relative">
+                
+                <!-- Flip Mode -->
+                <div id="flipContainer" class="mode-container">
+                    <div class="perspective-1000 h-[500px] cursor-pointer" onclick="flipCard()">
+                        <div id="flipCardInner" class="card-inner relative w-full h-full transform-style-3d">
+                            <!-- Front -->
+                            <div class="absolute inset-0 backface-hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col">
+                                <div class="flex items-center justify-between mb-6">
+                                    <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full" id="flipCategory">JavaScript</span>
+                                    <span class="text-slate-400 text-sm">点击翻转 →</span>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <h2 class="text-2xl font-bold text-slate-800 text-center leading-relaxed" id="flipQuestion">
+                                        什么是闭包？请解释其原理和应用场景。
+                                    </h2>
+                                </div>
+                                <div class="flex items-center justify-between text-sm text-slate-400">
+                                    <span id="flipCounter">1 / 10</span>
+                                    <button onclick="event.stopPropagation(); showHint()" class="text-blue-500 hover:text-blue-600 font-medium">
+                                        💡 提示
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Back -->
+                            <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-8 flex flex-col text-white">
+                                <div class="flex items-center justify-between mb-6">
+                                    <span class="px-3 py-1 bg-white/10 text-blue-300 text-xs font-medium rounded-full">答案解析</span>
+                                    <button onclick="event.stopPropagation(); markMastered()" class="px-4 py-1.5 bg-green-500 hover:bg-green-600 rounded-lg text-sm font-medium transition-colors">
+                                        ✓ 已掌握
+                                    </button>
+                                </div>
+                                <div class="flex-1 overflow-y-auto pr-2" id="flipAnswer">
+                                    <!-- Content injected by JS -->
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                                    <button onclick="event.stopPropagation(); prevCard()" class="text-slate-400 hover:text-white transition-colors">← 上一张</button>
+                                    <button onclick="event.stopPropagation(); nextCard()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors">下一张 →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fill Mode -->
+                <div id="fillContainer" class="mode-container hidden">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="px-3 py-1 bg-purple-50 text-purple-600 text-xs font-medium rounded-full" id="fillCategory">JavaScript</span>
+                            <span class="text-slate-400 text-sm" id="fillCounter">1 / 10</span>
+                        </div>
+                        
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-slate-700 mb-4">请补全以下代码/概念中的空缺部分：</h3>
+                            <div id="fillContent" class="text-slate-800 leading-loose text-lg">
+                                <!-- Content with blanks injected by JS -->
+                            </div>
+                        </div>
+
+                        <div id="fillHint" class="hidden mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg hint-animate">
+                            <div class="flex items-start gap-2">
+                                <span class="text-amber-500 text-lg">💡</span>
+                                <div>
+                                    <div class="font-medium text-amber-800 text-sm mb-1">提示</div>
+                                    <div class="text-amber-700 text-sm" id="fillHintText"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button onclick="checkFill()" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                                检查答案
+                            </button>
+                            <button onclick="showFillHint()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors">
+                                提示
+                            </button>
+                            <button onclick="nextFill()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors ml-auto">
+                                跳过 →
+                            </button>
+                        </div>
+
+                        <div id="fillResult" class="mt-4 hidden">
+                            <div class="p-4 rounded-lg" id="fillResultBox">
+                                <div class="font-medium mb-1" id="fillResultTitle"></div>
+                                <div class="text-sm opacity-90" id="fillResultText"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Write Mode -->
+                <div id="writeContainer" class="mode-container hidden">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="px-3 py-1 bg-green-50 text-green-600 text-xs font-medium rounded-full" id="writeCategory">JavaScript</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="showWriteHint()" class="text-sm text-blue-500 hover:text-blue-600 font-medium">💡 提示</button>
+                                <span class="text-slate-400 text-sm" id="writeCounter">1 / 10</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <h3 class="text-xl font-bold text-slate-800 mb-2" id="writeQuestion">手写 Promise.all</h3>
+                            <p class="text-slate-500 text-sm" id="writeDescription">请默写实现代码，尽量完整。</p>
+                        </div>
+
+                        <div id="writeHint" class="hidden mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hint-animate">
+                            <div class="text-sm text-blue-700" id="writeHintText"></div>
+                        </div>
+
+                        <textarea 
+                            id="writeInput" 
+                            class="w-full h-64 p-4 bg-slate-50 border border-slate-200 rounded-xl mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="// 在此输入你的代码..."
+                        ></textarea>
+
+                        <div class="flex items-center gap-3 mt-4">
+                            <button onclick="checkWrite()" class="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
+                                提交检查
+                            </button>
+                            <button onclick="showWriteAnswer()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors">
+                                查看答案
+                            </button>
+                            <button onclick="nextWrite()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors ml-auto">
+                                下一题 →
+                            </button>
+                        </div>
+
+                        <div id="writeResult" class="mt-6 hidden">
+                            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                                    <span class="font-medium text-slate-700 text-sm">参考答案</span>
+                                    <span class="text-xs text-slate-400">对比你的实现</span>
+                                </div>
+                                <pre class="code-block m-0 rounded-none" id="writeAnswer"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Choice Mode -->
+                <div id="choiceContainer" class="mode-container hidden">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full" id="choiceCategory">浏览器</span>
+                            <span class="text-slate-400 text-sm" id="choiceCounter">1 / 10</span>
+                        </div>
+
+                        <div class="mb-8">
+                            <h3 class="text-xl font-bold text-slate-800 mb-6" id="choiceQuestion">以下关于 Event Loop 的说法，正确的是？</h3>
+                            <div class="space-y-3" id="choiceOptions">
+                                <!-- Options injected by JS -->
+                            </div>
+                        </div>
+
+                        <div id="choiceResult" class="hidden mb-6 p-4 rounded-lg" id="choiceResultBox">
+                            <div class="font-medium mb-1" id="choiceResultTitle"></div>
+                            <div class="text-sm" id="choiceResultText"></div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button onclick="nextChoice()" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                                下一题 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="mt-6 text-center text-xs text-slate-400">
+                快捷键: <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Space</span> 翻转/下一题 
+                <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded ml-2">← →</span> 切换卡片
+                <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded ml-2">H</span> 提示
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ==================== Data ====================
+        const categories = [
+            { id: 'js', name: 'JavaScript 基础', icon: '⚡', count: 0 },
+            { id: 'browser', name: '浏览器原理', icon: '🌐', count: 0 },
+            { id: 'react', name: 'React 核心', icon: '⚛️', count: 0 },
+            { id: 'vue', name: 'Vue 核心', icon: '🟢', count: 0 },
+            { id: 'engineering', name: '工程化', icon: '🛠️', count: 0 },
+            { id: 'handwrite', name: '手写题', icon: '✍️', count: 0 }
+        ];
+
+        const cards = [
+            // JavaScript
+            {
+                id: 1,
+                category: 'js',
+                question: '什么是闭包？请解释其原理和应用场景。',
+                answer: `<div class="space-y-4">
+                    <p><strong>定义：</strong>闭包是指有权访问另一个函数作用域中的变量的函数。</p>
+                    <div class="code-block mono">function createCounter() {
+    let count = 0;
+    return function() {
+        return ++count;
+    };
+}
+const counter = createCounter();</div>
+                    <p><strong>原理：</strong>通过作用域链（Scope Chain）实现，内部函数持有外部函数的变量对象（VO），即使外部函数执行完毕，这些变量也不会被垃圾回收。</p>
+                    <p><strong>应用：</strong>数据私有化、柯里化、防抖节流、函数工厂。</p>
+                    <p><strong>注意：</strong>过度使用可能导致内存泄漏，特别是在循环中创建闭包时需注意 let 与 var 的区别。</p>
+                </div>`,
+                fill: {
+                    text: '闭包是指有权访问另一个<span class="blank" data-answer="函数作用域">_____</span>中的变量的函数。其核心原理是通过<span class="blank" data-answer="作用域链">_____</span>实现，即使外部函数执行完毕，内部函数仍可访问外部变量。常见应用包括<span class="blank" data-answer="防抖节流">_____</span>、<span class="blank" data-answer="数据私有化">_____</span>等。使用时需注意<span class="blank" data-answer="内存泄漏">_____</span>风险。',
+                    hint: '想想函数执行完毕后，为什么变量还能被访问？'
+                },
+                write: {
+                    desc: '请手写一个防抖函数（debounce），要求支持立即执行选项和取消功能。',
+                    hint: '核心：定时器 + 时间戳；注意 this 指向和参数传递',
+                    answer: `function debounce(fn, delay, immediate = false) {
+    let timer = null;
+    
+    function debounced(...args) {
+        const context = this;
+        const callNow = immediate && !timer;
+        
+        clearTimeout(timer);
+        
+        timer = setTimeout(() => {
+            timer = null;
+            if (!immediate) fn.apply(context, args);
+        }, delay);
+        
+        if (callNow) fn.apply(context, args);
+    }
+    
+    debounced.cancel = () => {
+        clearTimeout(timer);
+        timer = null;
+    };
+    
+    return debounced;
+}`
+                },
+                choice: {
+                    question: '以下关于闭包的说法，错误的是？',
+                    options: [
+                        '闭包可以访问外部函数的变量',
+                        '闭包会导致外部函数的变量在函数执行完后立即销毁',
+                        '闭包可以用于实现数据私有化',
+                        '过度使用闭包可能导致内存泄漏'
+                    ],
+                    correct: 1,
+                    explanation: '闭包的特点正是外部函数执行完毕后，其变量不会被销毁，而是被内部函数引用持有。'
+                },
+                hint: '从作用域链和垃圾回收的角度思考'
+            },
+            {
+                id: 2,
+                category: 'js',
+                question: '解释 Event Loop 中宏任务与微任务的执行顺序。',
+                answer: `<div class="space-y-4">
+                    <p><strong>执行顺序：</strong>同步代码 → 微任务队列清空 → 宏任务队列取一个执行 → 重复。</p>
+                    <div class="code-block mono">console.log('1'); // 同步
+setTimeout(() => console.log('2'), 0); // 宏任务
+Promise.resolve().then(() => console.log('3')); // 微任务
+console.log('4'); // 同步
+// 输出: 1 4 3 2</div>
+                    <p><strong>微任务：</strong>Promise.then/catch/finally、MutationObserver、queueMicrotask。</p>
+                    <p><strong>宏任务：</strong>setTimeout/setInterval、setImmediate(Node)、I/O、UI rendering。</p>
+                    <p><strong>Node.js 差异：</strong>分为 6 个 phases（timers → pending → idle → poll → check → close），每个 phase 结束后执行微任务。</p>
+                </div>`,
+                fill: {
+                    text: 'Event Loop 执行顺序：首先执行所有<span class="blank" data-answer="同步代码">_____</span>，然后清空<span class="blank" data-answer="微任务">_____</span>队列，最后从<span class="blank" data-answer="宏任务">_____</span>队列中取一个任务执行。Promise.then 属于<span class="blank" data-answer="微任务">_____</span>，setTimeout 属于<span class="blank" data-answer="宏任务">_____</span>。',
+                    hint: '记住 Promise 比 setTimeout 快'
+                },
+                write: {
+                    desc: '请写出以下代码的输出顺序，并解释原因。',
+                    hint: '先标出每个任务是宏任务还是微任务',
+                    answer: `console.log('1');
+setTimeout(() => console.log('2'), 0);
+Promise.resolve().then(() => console.log('3'));
+console.log('4');
+
+// 输出: 1 4 3 2
+
+// 解析：
+// 1. 同步代码: 1, 4
+// 2. 微任务: Promise.then → 3  
+// 3. 宏任务: setTimeout → 2`
+                },
+                choice: {
+                    question: '以下代码的输出顺序是？\nconsole.log("1"); Promise.resolve().then(() => console.log("2")); setTimeout(() => console.log("3"), 0); console.log("4");',
+                    options: ['1 2 3 4', '1 4 2 3', '1 4 3 2', '1 2 4 3'],
+                    correct: 1,
+                    explanation: '同步代码(1,4) → 微任务 Promise(2) → 宏任务 setTimeout(3)'
+                },
+                hint: '记住"同步 > 微任务 > 宏任务"'
+            },
+            {
+                id: 3,
+                category: 'js',
+                question: '手写 new 操作符的实现。',
+                answer: `<div class="space-y-4">
+                    <p><strong>new 操作符做了四件事：</strong></p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                        <li>创建空对象</li>
+                        <li>链接到原型</li>
+                        <li>绑定 this 执行构造函数</li>
+                        <li>返回对象（若构造函数无返回值或返回非对象）</li>
+                    </ol>
+                    <div class="code-block mono">function myNew(ctor, ...args) {
+    const obj = Object.create(ctor.prototype);
+    const result = ctor.apply(obj, args);
+    return (result !== null && 
+           (typeof result === 'object' || typeof result === 'function')) 
+           ? result : obj;
+}</div>
+                </div>`,
+                fill: {
+                    text: 'new 操作符的实现步骤：1. 创建空对象并链接到构造函数的<span class="blank" data-answer="prototype">_____</span>；2. 将构造函数中的<span class="blank" data-answer="this">_____</span>绑定到这个新对象；3. 执行构造函数；4. 若构造函数返回非对象，则返回<span class="blank" data-answer="新对象">_____</span>。',
+                    hint: 'new 的核心是原型链继承 + this 绑定'
+                },
+                write: {
+                    desc: '请手写实现 new 操作符。',
+                    hint: 'Object.create + apply + 判断返回值类型',
+                    answer: `function myNew(constructor, ...args) {
+    // 1. 创建对象，继承构造函数原型
+    const obj = Object.create(constructor.prototype);
+    
+    // 2. 执行构造函数，绑定 this
+    const result = constructor.apply(obj, args);
+    
+    // 3. 判断返回值
+    return (result !== null && 
+           (typeof result === 'object' || typeof result === 'function')) 
+           ? result : obj;
+}`
+                },
+                choice: {
+                    question: 'new 操作符不会执行以下哪个步骤？',
+                    options: [
+                        '创建一个新对象',
+                        '将构造函数的原型链接到新对象',
+                        '将新对象作为参数传递给构造函数',
+                        '执行构造函数并绑定 this'
+                    ],
+                    correct: 2,
+                    explanation: 'new 是将 this 绑定到新对象，而不是将新对象作为参数传递。'
+                },
+                hint: 'new 的核心是原型继承 + this 绑定'
+            },
+            {
+                id: 4,
+                category: 'js',
+                question: 'this 的四种绑定规则是什么？箭头函数有何不同？',
+                answer: `<div class="space-y-4">
+                    <p><strong>四种绑定规则（优先级从高到低）：</strong></p>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
+                        <li><strong>new 绑定：</strong>new Foo() → this 指向新对象</li>
+                        <li><strong>显式绑定：</strong>call/apply/bind → this 指向指定对象</li>
+                        <li><strong>隐式绑定：</strong>obj.foo() → this 指向 obj</li>
+                        <li><strong>默认绑定：</strong>foo() → this 指向全局（严格模式 undefined）</li>
+                    </ol>
+                    <p><strong>箭头函数：</strong>没有自己的 this，继承外层作用域的 this，且不可被 call/apply/bind 改变。</p>
+                    <div class="code-block mono">const obj = {
+    name: 'obj',
+    regular: function() { console.log(this.name); },
+    arrow: () => console.log(this.name)
+};
+obj.regular(); // 'obj'
+obj.arrow();   // undefined（继承全局/外层 this）</div>
+                </div>`,
+                fill: {
+                    text: 'this 绑定优先级：new 绑定 > <span class="blank" data-answer="显式绑定">_____</span> > <span class="blank" data-answer="隐式绑定">_____</span> > <span class="blank" data-answer="默认绑定">_____</span>。箭头函数没有自己的 this，它会继承<span class="blank" data-answer="外层作用域">_____</span>的 this。',
+                    hint: '记住"硬绑定"（bind）优先级很高'
+                },
+                write: {
+                    desc: '请手写 call 的实现。',
+                    hint: '将函数作为对象的临时方法执行',
+                    answer: `Function.prototype.myCall = function(context, ...args) {
+    context = context || window;
+    const fnSymbol = Symbol('fn');
+    context[fnSymbol] = this;
+    const result = context[fnSymbol](...args);
+    delete context[fnSymbol];
+    return result;
+};`
+                },
+                choice: {
+                    question: '以下代码中 foo() 的 this 指向？\nfunction foo() { console.log(this.a); }\nvar a = 2;\nfoo();',
+                    options: ['window/全局对象', 'undefined', 'foo 自身', '抛出错误'],
+                    correct: 0,
+                    explanation: '直接调用 foo() 属于默认绑定，非严格模式下 this 指向全局对象。'
+                },
+                hint: '看调用位置，不是定义位置'
+            },
+            {
+                id: 5,
+                category: 'js',
+                question: '手写 Promise（基础版）。',
+                answer: `<div class="space-y-4">
+                    <p><strong>核心要点：</strong>状态机（pending/fulfilled/rejected）、then 方法链式调用、异步执行回调。</p>
+                    <div class="code-block mono">class MyPromise {
+    constructor(executor) {
+        this.state = 'pending';
+        this.value = undefined;
+        this.reason = undefined;
+        this.onFulfilledCallbacks = [];
+        this.onRejectedCallbacks = [];
+        
+        const resolve = (value) => {
+            if (this.state === 'pending') {
+                this.state = 'fulfilled';
+                this.value = value;
+                this.onFulfilledCallbacks.forEach(fn => fn());
+            }
+        };
+        
+        const reject = (reason) => {
+            if (this.state === 'pending') {
+                this.state = 'rejected';
+                this.reason = reason;
+                this.onRejectedCallbacks.forEach(fn => fn());
+            }
+        };
+        
+        try {
+            executor(resolve, reject);
+        } catch (err) {
+            reject(err);
+        }
+    }
+    
+    then(onFulfilled, onRejected) {
+        // 简化版，实际需处理链式调用和 Promise 解析
+        if (this.state === 'fulfilled') {
+            onFulfilled(this.value);
+        }
+        if (this.state === 'rejected') {
+            onRejected(this.reason);
+        }
+        if (this.state === 'pending') {
+            this.onFulfilledCallbacks.push(() => onFulfilled(this.value));
+            this.onRejectedCallbacks.push(() => onRejected(this.reason));
+        }
+    }
+}</div>
+                </div>`,
+                fill: {
+                    text: 'Promise 有三种状态：<span class="blank" data-answer="pending">_____</span>、<span class="blank" data-answer="fulfilled">_____</span>、<span class="blank" data-answer="rejected">_____</span>。状态一旦改变就不可再次修改。then 方法接收两个回调，分别对应<span class="blank" data-answer="成功">_____</span>和<span class="blank" data-answer="失败">_____</span>的情况。',
+                    hint: 'Promise 的核心是状态不可变 + 异步回调队列'
+                },
+                write: {
+                    desc: '请手写 Promise.all，要求支持所有 Promise 完成或任一 reject。',
+                    hint: '计数器 + 数组存储结果',
+                    answer: `Promise.myAll = function(promises) {
+    return new Promise((resolve, reject) => {
+        const results = [];
+        let completed = 0;
+        
+        promises.forEach((p, index) => {
+            Promise.resolve(p).then(value => {
+                results[index] = value;
+                completed++;
+                if (completed === promises.length) {
+                    resolve(results);
+                }
+            }).catch(reject);
+        });
+        
+        if (promises.length === 0) resolve([]);
+    });
+};`
+                },
+                choice: {
+                    question: 'Promise.then() 返回的是？',
+                    options: [
+                        'undefined',
+                        '一个新的 Promise',
+                        '原始 Promise',
+                        '回调函数的返回值'
+                    ],
+                    correct: 1,
+                    explanation: 'then 方法始终返回一个新的 Promise，支持链式调用。'
+                },
+                hint: 'Promise 的核心是链式调用'
+            },
+
+            // Browser
+            {
+                id: 6,
+                category: 'browser',
+                question: '浏览器渲染页面的完整流程是什么？',
+                answer: `<div class="space-y-4">
+                    <p><strong>关键路径（Critical Rendering Path）：</strong></p>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
+                        <li><strong>解析 HTML</strong> → DOM Tree</li>
+                        <li><strong>解析 CSS</strong> → CSSOM Tree</li>
+                        <li><strong>合并</strong> → Render Tree（只包含可见节点）</li>
+                        <li><strong>Layout（重排）</strong> → 计算几何信息</li>
+                        <li><strong>Paint（重绘）</strong> → 绘制像素</li>
+                        <li><strong>Composite（合成）</strong> → 分层合成最终页面</li>
+                    </ol>
+                    <p><strong>优化：</strong>CSS 放头部（避免 FOUC）、JS 放底部或 defer/async（避免阻塞解析）、减少重排（使用 transform/opacity）。</p>
+                </div>`,
+                fill: {
+                    text: '浏览器渲染流程：HTML → <span class="blank" data-answer="DOM">_____</span> Tree，CSS → <span class="blank" data-answer="CSSOM">_____</span> Tree，合并为 <span class="blank" data-answer="Render">_____</span> Tree，然后经过 <span class="blank" data-answer="Layout">_____</span>（布局/重排）、<span class="blank" data-answer="Paint">_____</span>（绘制/重绘）、Composite（合成）。',
+                    hint: '记住 CRITICAL RENDERING PATH 的缩写'
+                },
+                write: {
+                    desc: '如何优化首屏加载速度？请列举至少 5 种方法。',
+                    hint: '从资源加载、渲染阻塞、缓存策略角度思考',
+                    answer: `// 首屏优化方案：
+1. 资源压缩与合并（Gzip、Tree Shaking）
+2. 路由懒加载 + 组件按需加载
+3. SSR / SSG（减少客户端渲染时间）
+4. 图片优化（WebP、懒加载、响应式图片）
+5. 关键 CSS 内联（Critical CSS）
+6. DNS 预解析 / 预连接 / 预加载
+7. Service Worker 缓存
+8. HTTP/2 Server Push（或 Early Hints）`
+                },
+                choice: {
+                    question: '以下哪个属性变化只会触发 Composite，不会触发 Layout 和 Paint？',
+                    options: ['width', 'background-color', 'transform', 'font-size'],
+                    correct: 2,
+                    explanation: 'transform 和 opacity 可以触发 GPU 加速，只走 Composite 层，性能最好。'
+                },
+                hint: 'GPU 加速的属性'
+            },
+            {
+                id: 7,
+                category: 'browser',
+                question: 'HTTP 缓存策略详解。',
+                answer: `<div class="space-y-4">
+                    <p><strong>强缓存（不会发请求到服务器）：</strong></p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li>Expires（HTTP/1.0，绝对时间，受本地时间影响）</li>
+                        <li>Cache-Control: max-age=31536000（HTTP/1.1，相对时间，优先级更高）</li>
+                    </ul>
+                    <p><strong>协商缓存（发请求询问是否可用缓存）：</strong></p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li>Last-Modified / If-Modified-Since（秒级精度，可能不准）</li>
+                        <li>ETag / If-None-Match（优先级更高，内容哈希）</li>
+                    </ul>
+                    <p><strong>缓存优先级：</strong>Service Worker > Memory Cache > Disk Cache > Push Cache > 网络请求。</p>
+                </div>`,
+                fill: {
+                    text: 'HTTP 缓存分为<span class="blank" data-answer="强缓存">_____</span>和<span class="blank" data-answer="协商缓存">_____</span>。强缓存通过 <span class="blank" data-answer="Cache-Control">_____</span> 控制，协商缓存通过 <span class="blank" data-answer="ETag">_____</span> 和 Last-Modified 验证资源是否更新。',
+                    hint: '200(from cache) vs 304 Not Modified'
+                },
+                write: {
+                    desc: '请写出 Cache-Control 的常见指令及含义。',
+                    hint: 'public/private/no-cache/no-store/max-age/s-maxage',
+                    answer: `Cache-Control 指令：
+- public: 任何缓存都可存储
+- private: 仅浏览器缓存
+- no-cache: 必须重新验证（走协商缓存）
+- no-store: 完全不缓存
+- max-age=秒: 强缓存时间
+- s-maxage=秒: CDN 缓存时间（代理服务器）
+- must-revalidate: 过期后必须验证`
+                },
+                choice: {
+                    question: '以下哪个响应头表示资源可以被任何缓存存储？',
+                    options: ['Cache-Control: private', 'Cache-Control: no-store', 'Cache-Control: public', 'Cache-Control: no-cache'],
+                    correct: 2,
+                    explanation: 'public 表示响应可以被任何缓存（包括 CDN 等共享缓存）存储。'
+                },
+                hint: '区分 private 和 public'
+            },
+
+            // React
+            {
+                id: 8,
+                category: 'react',
+                question: 'React Fiber 架构的核心设计思想是什么？',
+                answer: `<div class="space-y-4">
+                    <p><strong>为什么需要 Fiber：</strong>React 15 的递归渲染不可中断，大量 DOM 操作阻塞主线程导致卡顿。</p>
+                    <p><strong>Fiber 核心：</strong></p>
+                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                        <li><strong>链表结构：</strong>每个 Fiber 节点有 child、sibling、return 指针，支持断点恢复</li>
+                        <li><strong>双缓冲：</strong>current tree（当前屏）和 workInProgress tree（下一屏），渲染完直接切换指针</li>
+                        <li><strong>时间切片：</strong>利用 requestIdleCallback 或 MessageChannel，将渲染拆分成小任务</li>
+                        <li><strong>优先级调度：</strong>高优先级任务（用户输入）可打断低优先级任务（列表渲染）</li>
+                    </ul>
+                    <p><strong>工作循环：</strong>performUnitOfWork → beginWork（向下）→ completeWork（向上）→ commit（同步提交）。</p>
+                </div>`,
+                fill: {
+                    text: 'Fiber 架构使用<span class="blank" data-answer="链表">_____</span>结构替代递归，支持<span class="blank" data-answer="中断">_____</span>和恢复渲染。采用<span class="blank" data-answer="双缓冲">_____</span>机制（current 和 workInProgress），通过<span class="blank" data-answer="时间切片">_____</span>将渲染任务拆分，避免阻塞主线程。',
+                    hint: '想想为什么链表比递归更适合中断'
+                },
+                write: {
+                    desc: 'React 18 的 Automatic Batching 是什么？与之前版本有何不同？',
+                    hint: 'setTimeout/Promise 中的 setState',
+                    answer: `// React 18 之前的 Batching：
+// 只在 React 事件处理函数中自动批处理
+// setTimeout/Promise 中的 setState 会同步触发多次渲染
+
+// React 18 的 Automatic Batching：
+// 所有场景（包括 setTimeout、Promise、原生事件）都会自动批处理
+// 减少不必要的重渲染
+
+setTimeout(() => {
+    setCount(c => c + 1); // 不会立即渲染
+    setFlag(f => !f);     // 不会立即渲染
+    // 退出事件后统一批处理渲染一次
+}, 1000);`
+                },
+                choice: {
+                    question: 'Fiber 节点中用于指向父节点的属性是？',
+                    options: ['parent', 'father', 'return', 'sibling'],
+                    correct: 2,
+                    explanation: 'Fiber 使用 return 指向父节点（因为函数执行完毕 return，语义更贴合）。'
+                },
+                hint: 'Fiber 是链表，有三个指针'
+            },
+            {
+                id: 9,
+                category: 'react',
+                question: 'Hooks 为什么不能放在 if 或循环中？',
+                answer: `<div class="space-y-4">
+                    <p><strong>原因：</strong>React 通过<strong>调用顺序</strong>来区分不同的 Hook，而不是通过名称。</p>
+                    <div class="code-block mono">// React 内部用数组存储 Hook 状态
+const hooks = [];
+let idx = 0;
+
+function useState(initial) {
+    const state = hooks[idx] || initial;
+    hooks[idx] = state;
+    const _idx = idx;
+    idx++;
+    return [state, (newVal) => hooks[_idx] = newVal];
+}</div>
+                    <p><strong>条件渲染会破坏顺序对应关系：</strong></p>
+                    <div class="code-block mono">if (condition) {
+    const [state, setState] = useState(); // 条件为 false 时跳过，索引错位！
+}</div>
+                    <p><strong>解决方案：</strong>将条件判断放在 Hook 内部，或使用自定义 Hook 封装。</p>
+                </div>`,
+                fill: {
+                    text: 'Hooks 依赖<span class="blank" data-answer="调用顺序">_____</span>来匹配状态。如果在 if 或循环中使用，会导致 Hook 的<span class="blank" data-answer="索引">_____</span>错位，React 无法正确对应组件状态。React 内部使用<span class="blank" data-answer="数组">_____</span>来存储所有 Hook 的状态。',
+                    hint: 'React 怎么知道这是第几个 useState？'
+                },
+                write: {
+                    desc: '请手写一个简化版的 useState。',
+                    hint: '数组存储 + 闭包 + 触发重新渲染',
+                    answer: `let hooks = [];
+let idx = 0;
+
+function useState(initialValue) {
+    const state = hooks[idx] !== undefined ? hooks[idx] : initialValue;
+    hooks[idx] = state;
+    const _idx = idx;
+    idx++;
+    
+    function setState(newValue) {
+        hooks[_idx] = newValue;
+        render(); // 触发重新渲染
+    }
+    
+    return [state, setState];
+}
+
+function MyComponent() {
+    const [count, setCount] = useState(0);
+    // ...
+}`
+                },
+                choice: {
+                    question: '以下代码会有什么问题？\nfunction Foo() {\n  if (condition) {\n    const [state] = useState(0);\n  }\n  const [other] = useState(1);\n}',
+                    options: [
+                        '语法错误',
+                        'Hook 调用顺序不稳定，导致状态错位',
+                        'condition 为 false 时组件崩溃',
+                        '没有任何问题'
+                    ],
+                    correct: 1,
+                    explanation: '条件渲染导致 Hook 调用次数不一致，React 无法通过索引正确匹配状态。'
+                },
+                hint: 'React 靠"第几次调用"来识别 Hook'
+            },
+            {
+                id: 10,
+                category: 'react',
+                question: 'React 的 Diff 算法策略是什么？',
+                answer: `<div class="space-y-4">
+                    <p><strong>三大策略（O(n) 复杂度）：</strong></p>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
+                        <li><strong>Tree Diff：</strong>只比较同层级节点，跨层级直接销毁重建</li>
+                        <li><strong>Component Diff：</strong>同类型组件继续 Diff，不同类型直接替换</li>
+                        <li><strong>Element Diff：</strong>通过 key 优化列表比较（移动 > 删除重建）</li>
+                    </ol>
+                    <p><strong>key 的作用：</strong>帮助 React 识别哪些元素改变了（增删改），减少不必要的 DOM 操作。不使用 key 或索引作为 key 在列表重排时会导致性能问题和状态错乱。</p>
+                    <p><strong>Vue2 差异：</strong>Vue2 使用双端 Diff（头尾指针），理论上更优，但 React 的 Fiber 架构使单次 Diff 可中断。</p>
+                </div>`,
+                fill: {
+                    text: 'React Diff 三大策略：<span class="blank" data-answer="Tree">_____</span> Diff（同层级比较）、<span class="blank" data-answer="Component">_____</span> Diff（同类型继续比较）、<span class="blank" data-answer="Element">_____</span> Diff（通过 <span class="blank" data-answer="key">_____</span> 优化列表）。不使用 key 会导致列表<span class="blank" data-answer="重排">_____</span>时性能下降和状态错乱。',
+                    hint: '为什么列表渲染必须加 key？'
+                },
+                write: {
+                    desc: '为什么不建议使用数组索引作为 key？什么情况下可以？',
+                    hint: '重排场景 vs 静态列表',
+                    answer: `// 不建议使用索引作为 key 的情况：
+// 1. 列表会重排（拖拽排序、筛选）
+// 2. 列表项有受控组件或内部状态
+// 因为索引变化会导致 React 误判为不同组件，状态错位
+
+// 可以使用索引作为 key 的情况：
+// 1. 纯展示列表，无内部状态
+// 2. 列表不会增删改，只会整体替换
+// 3. 列表项是简单的文本/图片
+
+// 最佳实践：使用唯一业务 ID（如数据库主键）`
+                },
+                choice: {
+                    question: 'React Diff 算法的时间复杂度是？',
+                    options: ['O(n³)', 'O(n²)', 'O(n)', 'O(log n)'],
+                    correct: 2,
+                    explanation: '通过三大策略（同层级、同类型、key 优化）将复杂度从 O(n³) 降到 O(n)。'
+                },
+                hint: '经典面试题：从 O(n³) 优化到 O(n)'
+            },
+
+            // Vue
+            {
+                id: 11,
+                category: 'vue',
+                question: 'Vue2 与 Vue3 响应式原理的区别？',
+                answer: `<div class="space-y-4">
+                    <p><strong>Vue2：</strong>Object.defineProperty</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li>只能劫持已存在的属性，新增属性需 Vue.set</li>
+                        <li>无法监听数组索引和 length 变化（需重写 7 个方法）</li>
+                        <li>嵌套对象需递归遍历，性能开销大</li>
+                    </ul>
+                    <p><strong>Vue3：</strong>Proxy</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li>可监听新增/删除属性</li>
+                        <li>原生支持数组索引和 length</li>
+                        <li>懒代理（访问时才递归），初始化性能更好</li>
+                        <li>但 Proxy 无法 polyfill，不兼容 IE11</li>
+                    </ul>
+                </div>`,
+                fill: {
+                    text: 'Vue2 使用<span class="blank" data-answer="Object.defineProperty">_____</span>实现响应式，无法监听对象<span class="blank" data-answer="新增">_____</span>属性和数组<span class="blank" data-answer="索引">_____</span>变化。Vue3 改用<span class="blank" data-answer="Proxy">_____</span>，支持懒代理，性能更优，但兼容性要求更高。',
+                    hint: 'Vue2 数组为什么能响应式？因为重写了方法'
+                },
+                write: {
+                    desc: '请手写一个简化版的 Vue3 reactive 实现。',
+                    hint: 'Proxy + Reflect + track/trigger',
+                    answer: `let activeEffect = null;
+
+function reactive(target) {
+    return new Proxy(target, {
+        get(obj, key) {
+            track(obj, key);
+            return obj[key];
+        },
+        set(obj, key, value) {
+            obj[key] = value;
+            trigger(obj, key);
+            return true;
+        }
+    });
+}
+
+function track(target, key) {
+    if (!activeEffect) return;
+    // 将 activeEffect 收集到 target[key] 的依赖集合中
+}
+
+function trigger(target, key) {
+    // 执行 target[key] 的所有依赖
+}
+
+function effect(fn) {
+    activeEffect = fn;
+    fn();
+    activeEffect = null;
+}`
+                },
+                choice: {
+                    question: 'Vue3 的 Proxy 相比 Vue2 的 defineProperty，以下哪个说法错误？',
+                    options: [
+                        'Proxy 可以监听新增属性',
+                        'Proxy 可以监听数组索引变化',
+                        'Proxy 可以兼容 IE11',
+                        'Proxy 支持懒代理'
+                    ],
+                    correct: 2,
+                    explanation: 'Proxy 无法 polyfill，不兼容 IE11，这是 Vue3 放弃 IE 支持的主要原因。'
+                },
+                hint: 'Proxy 的兼容性'
+            },
+
+            // Engineering
+            {
+                id: 12,
+                category: 'engineering',
+                question: 'Webpack 的 Loader 和 Plugin 有什么区别？',
+                answer: `<div class="space-y-4">
+                    <p><strong>Loader：</strong>文件转换器，处理模块的<strong>加载和转换</strong>（如 babel-loader、css-loader）。</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li>执行时机：模块加载时</li>
+                        <li>配置方式：module.rules 数组，从右到左/下到上执行</li>
+                        <li>本质：函数，接收源文件内容，返回转换后的内容</li>
+                    </ul>
+                    <p><strong>Plugin：</strong>扩展 Webpack 功能，处理<strong>构建生命周期</strong>（如 HtmlWebpackPlugin、CleanWebpackPlugin）。</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li>执行时机：贯穿整个编译周期（compile → make → seal → emit）</li>
+                        <li>配置方式：plugins 数组</li>
+                        <li>本质：类，通过 apply 方法注册钩子</li>
+                    </ul>
+                </div>`,
+                fill: {
+                    text: 'Loader 是<span class="blank" data-answer="文件转换器">_____</span>，处理模块的加载和转换；Plugin 是<span class="blank" data-answer="扩展插件">_____</span>，处理构建生命周期。Loader 在<span class="blank" data-answer="模块加载">_____</span>时执行，Plugin 通过<span class="blank" data-answer="钩子">_____</span>机制介入编译全过程。',
+                    hint: 'Loader 处理"文件内容"，Plugin 处理"构建流程"'
+                },
+                write: {
+                    desc: 'Vite 为什么比 Webpack 快？其预构建（pre-bundle）的作用是什么？',
+                    hint: 'ESM vs Bundle、esbuild、依赖缓存',
+                    answer: `// Vite 快的原因：
+1. 开发环境基于原生 ESM，无需打包，按需编译
+2. 使用 esbuild（Go 编写）预构建依赖，比 JS 快 10-100 倍
+3. 利用浏览器缓存，模块级 HMR
+
+// 预构建（pre-bundle）的作用：
+1. 将 CommonJS 依赖转换为 ESM
+2. 减少模块数量（如 lodash 数百个模块合并为几个）
+3. 缓存到 node_modules/.vite，加速后续启动`
+                },
+                choice: {
+                    question: '以下哪个是 Plugin 的典型应用场景？',
+                    options: [
+                        '将 ES6 转换为 ES5',
+                        '处理 CSS 中的 @import',
+                        '在构建完成后生成 HTML 文件',
+                        '加载图片文件'
+                    ],
+                    correct: 2,
+                    explanation: '生成 HTML 是 HtmlWebpackPlugin 的功能，属于 Plugin。其他都是 Loader 的功能。'
+                },
+                hint: 'Plugin 操作的是"构建流程"而非"文件内容"'
+            },
+
+            // Handwrite
+            {
+                id: 13,
+                category: 'handwrite',
+                question: '手写深拷贝（处理循环引用）。',
+                answer: `<div class="space-y-4">
+                    <div class="code-block mono">function deepClone(obj, map = new WeakMap()) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj instanceof Date) return new Date(obj);
+    if (obj instanceof RegExp) return new RegExp(obj);
+    if (obj instanceof Map) return new Map(Array.from(obj, ([k, v]) => [k, deepClone(v, map)]));
+    if (obj instanceof Set) return new Set(Array.from(obj, v => deepClone(v, map)));
+    
+    if (map.has(obj)) return map.get(obj); // 处理循环引用
+    
+    const clone = Array.isArray(obj) ? [] : {};
+    map.set(obj, clone);
+    
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            clone[key] = deepClone(obj[key], map);
+        }
+    }
+    
+    return clone;
+}</div>
+                    <p><strong>关键点：</strong>WeakMap 存储已拷贝对象（避免循环引用导致栈溢出）、处理特殊对象（Date/RegExp/Map/Set）、递归拷贝。</p>
+                </div>`,
+                fill: {
+                    text: '深拷贝处理循环引用需要使用<span class="blank" data-answer="WeakMap">_____</span>存储已拷贝的对象。遇到已存在的对象时直接<span class="blank" data-answer="返回引用">_____</span>，避免无限递归。还需特殊处理 <span class="blank" data-answer="Date">_____</span>、RegExp、Map、Set 等内置对象。',
+                    hint: '为什么用 WeakMap 不用 Map？'
+                },
+                write: {
+                    desc: '请手写一个支持循环引用的深拷贝函数。',
+                    hint: 'WeakMap + 递归 + 特殊对象处理',
+                    answer: `function deepClone(obj, map = new WeakMap()) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (obj instanceof Date) return new Date(obj);
+    if (obj instanceof RegExp) return new RegExp(obj);
+    
+    if (map.has(obj)) return map.get(obj);
+    
+    const clone = Array.isArray(obj) ? [] : {};
+    map.set(obj, clone);
+    
+    for (let key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            clone[key] = deepClone(obj[key], map);
+        }
+    }
+    return clone;
+}`
+                },
+                choice: {
+                    question: '深拷贝中为什么使用 WeakMap 而不是 Map 来存储已拷贝对象？',
+                    options: [
+                        'WeakMap 性能更好',
+                        'WeakMap 的键是弱引用，不会阻止垃圾回收',
+                        'WeakMap 可以存储更多数据',
+                        'WeakMap 支持更多数据类型作为键'
+                    ],
+                    correct: 1,
+                    explanation: 'WeakMap 的键是对象的弱引用，当原对象不再被其他地方引用时，可以被垃圾回收，避免内存泄漏。'
+                },
+                hint: '垃圾回收机制'
+            },
+            {
+                id: 14,
+                category: 'handwrite',
+                question: '手写 LRU 缓存。',
+                answer: `<div class="space-y-4">
+                    <div class="code-block mono">class LRUCache {
+    constructor(capacity) {
+        this.capacity = capacity;
+        this.cache = new Map(); // Map 保持插入顺序
+    }
+    
+    get(key) {
+        if (!this.cache.has(key)) return -1;
+        const value = this.cache.get(key);
+        this.cache.delete(key);
+        this.cache.set(key, value); // 移到末尾（最新）
+        return value;
+    }
+    
+    put(key, value) {
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
+        } else if (this.cache.size >= this.capacity) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey); // 删除最久未使用
+        }
+        this.cache.set(key, value);
+    }
+}</div>
+                    <p><strong>核心：</strong>利用 Map 的迭代顺序特性，get 时先 delete 再 set 将其移到末尾（最新），超出容量时删除第一个（最旧）。</p>
+                </div>`,
+                fill: {
+                    text: 'LRU 缓存使用<span class="blank" data-answer="Map">_____</span>实现，利用其保持<span class="blank" data-answer="插入顺序">_____</span>的特性。get 操作时，先删除再重新插入，将其移到<span class="blank" data-answer="末尾">_____</span>（最新）。超出容量时，删除<span class="blank" data-answer="第一个">_____</span>元素（最久未使用）。',
+                    hint: 'Map 的 keys() 顺序特性'
+                },
+                write: {
+                    desc: '请使用 Map 手写一个 LRU 缓存，支持 get 和 put 操作。',
+                    hint: 'Map 的顺序特性 + O(1) 操作',
+                    answer: `class LRUCache {
+    constructor(capacity) {
+        this.capacity = capacity;
+        this.cache = new Map();
+    }
+    
+    get(key) {
+        if (!this.cache.has(key)) return -1;
+        const val = this.cache.get(key);
+        this.cache.delete(key);
+        this.cache.set(key, val);
+        return val;
+    }
+    
+    put(key, value) {
+        if (this.cache.has(key)) this.cache.delete(key);
+        else if (this.cache.size >= this.capacity) {
+            const oldest = this.cache.keys().next().value;
+            this.cache.delete(oldest);
+        }
+        this.cache.set(key, value);
+    }
+}`
+                },
+                choice: {
+                    question: 'LRU 缓存中，Map 相比普通对象的优势是？',
+                    options: [
+                        'Map 可以存储更多数据',
+                        'Map 保持插入顺序，且迭代性能稳定',
+                        'Map 的键只能是字符串',
+                        'Map 不支持 delete 操作'
+                    ],
+                    correct: 1,
+                    explanation: '普通对象的键顺序在数字键时不保证插入顺序，且 Map 的迭代性能更优。'
+                },
+                hint: 'Map vs Object 的顺序特性'
+            }
+        ];
+
+        // ==================== State ====================
+        let currentMode = 'flip';
+        let currentCategory = 'all';
+        let currentIndex = 0;
+        let streak = 0;
+        let masteredCards = new Set(JSON.parse(localStorage.getItem('masteredCards') || '[]'));
+        let cardHistory = JSON.parse(localStorage.getItem('cardHistory') || '{}');
+        
+        const filteredCards = () => currentCategory === 'all' 
+            ? cards 
+            : cards.filter(c => c.category === currentCategory);
+
+        // ==================== Initialization ====================
+        function init() {
+            updateCategoryCounts();
+            renderCategoryNav();
+            renderMobileNav();
+            updateStats();
+            loadCard();
+            setupKeyboard();
+        }
+
+        function updateCategoryCounts() {
+            categories.forEach(cat => {
+                cat.count = cards.filter(c => c.category === cat.id).length;
+            });
+        }
+
+        function renderCategoryNav() {
+            const nav = document.getElementById('categoryNav');
+            const allCount = cards.length;
+            const allMastered = cards.filter(c => masteredCards.has(c.id)).length;
+            
+            nav.innerHTML = `
+                <button onclick="setCategory('all')" class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-1 ${currentCategory === 'all' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-600'}" data-cat="all">
+                    <div class="flex items-center justify-between">
+                        <span>📚 全部卡片</span>
+                        <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full">${allMastered}/${allCount}</span>
+                    </div>
+                </button>
+            `;
+            
+            categories.forEach(cat => {
+                const mastered = cards.filter(c => c.category === cat.id && masteredCards.has(c.id)).length;
+                nav.innerHTML += `
+                    <button onclick="setCategory('${cat.id}')" class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-1 ${currentCategory === cat.id ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-600'}" data-cat="${cat.id}">
+                        <div class="flex items-center justify-between">
+                            <span>${cat.icon} ${cat.name}</span>
+                            <span class="text-xs bg-slate-100 px-2 py-0.5 rounded-full">${mastered}/${cat.count}</span>
+                        </div>
+                    </button>
+                `;
+            });
+        }
+
+        function renderMobileNav() {
+            const nav = document.getElementById('mobileCategoryNav');
+            nav.innerHTML = `
+                <button onclick="setCategory('all')" class="shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap ${currentCategory === 'all' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}">全部</button>
+            `;
+            categories.forEach(cat => {
+                nav.innerHTML += `
+                    <button onclick="setCategory('${cat.id}')" class="shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap ${currentCategory === cat.id ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}">${cat.icon} ${cat.name}</button>
+                `;
+            });
+        }
+
+        function updateStats() {
+            const filtered = filteredCards();
+            const total = filtered.length;
+            const mastered = filtered.filter(c => masteredCards.has(c.id)).length;
+            const totalAll = cards.length;
+            const masteredAll = cards.filter(c => masteredCards.has(c.id)).length;
+            
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statMastered').textContent = mastered;
+            
+            const historyEntries = Object.values(cardHistory);
+            const accuracy = historyEntries.length > 0 
+                ? Math.round((historyEntries.filter(h => h.correct).length / historyEntries.length) * 100)
+                : 0;
+            document.getElementById('statAccuracy').textContent = accuracy + '%';
+            
+            const progress = totalAll > 0 ? (masteredAll / totalAll) * 100 : 0;
+            document.getElementById('totalProgress').style.width = progress + '%';
+        }
+
+        // ==================== Mode Switching ====================
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
+                    btn.classList.remove('hover:bg-slate-50', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium');
+                    btn.classList.add('hover:bg-slate-50', 'text-slate-600');
+                }
+            });
+            
+            document.querySelectorAll('.mode-container').forEach(c => c.classList.add('hidden'));
+            document.getElementById(mode + 'Container').classList.remove('hidden');
+            
+            loadCard();
+        }
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            currentIndex = 0;
+            renderCategoryNav();
+            renderMobileNav();
+            updateStats();
+            loadCard();
+        }
+
+        // ==================== Flip Mode ====================
+        function loadCard() {
+            const filtered = filteredCards();
+            if (filtered.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            const card = filtered[currentIndex % filtered.length];
+            
+            if (currentMode === 'flip') {
+                loadFlipCard(card);
+            } else if (currentMode === 'fill') {
+                loadFillCard(card);
+            } else if (currentMode === 'write') {
+                loadWriteCard(card);
+            } else if (currentMode === 'choice') {
+                loadChoiceCard(card);
+            }
+        }
+
+        function loadFlipCard(card) {
+            document.getElementById('flipCategory').textContent = getCategoryName(card.category);
+            document.getElementById('flipQuestion').textContent = card.question;
+            document.getElementById('flipAnswer').innerHTML = card.answer;
+            document.getElementById('flipCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
+            
+            // Reset flip
+            document.getElementById('flipCardInner').classList.remove('rotate-y-180');
+        }
+
+        function flipCard() {
+            document.getElementById('flipCardInner').classList.toggle('rotate-y-180');
+        }
+
+        function showHint() {
+            const card = filteredCards()[currentIndex % filteredCards().length];
+            alert('💡 提示：' + card.hint);
+        }
+
+        function markMastered() {
+            const card = filteredCards()[currentIndex % filteredCards().length];
+            masteredCards.add(card.id);
+            localStorage.setItem('masteredCards', JSON.stringify([...masteredCards]));
+            
+            streak++;
+            updateStreak();
+            updateStats();
+            renderCategoryNav();
+            
+            // Confetti effect
+            createConfetti();
+            
+            setTimeout(() => nextCard(), 500);
+        }
+
+        function nextCard() {
+            currentIndex++;
+            loadCard();
+        }
+
+        function prevCard() {
+            currentIndex = Math.max(0, currentIndex - 1);
+            loadCard();
+        }
+
+        // ==================== Fill Mode ====================
+        function loadFillCard(card) {
+            if (!card.fill) {
+                nextFill();
+                return;
+            }
+            
+            document.getElementById('fillCategory').textContent = getCategoryName(card.category);
+            document.getElementById('fillCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
+            document.getElementById('fillContent').innerHTML = card.fill.text;
+            document.getElementById('fillHintText').textContent = card.fill.hint;
+            
+            document.getElementById('fillHint').classList.add('hidden');
+            document.getElementById('fillResult').classList.add('hidden');
+            
+            // Setup blanks
+            document.querySelectorAll('.blank').forEach(blank => {
+                blank.contentEditable = true;
+                blank.classList.remove('correct', 'wrong');
+                blank.textContent = '_____';
+                blank.style.minWidth = '60px';
+                blank.style.display = 'inline-block';
+                blank.style.textAlign = 'center';
+            });
+        }
+
+        function showFillHint() {
+            document.getElementById('fillHint').classList.remove('hidden');
+        }
+
+        function checkFill() {
+            const blanks = document.querySelectorAll('.blank');
+            let allCorrect = true;
+            
+            blanks.forEach(blank => {
+                const answer = blank.dataset.answer;
+                const input = blank.textContent.trim();
+                
+                if (input === answer || (answer.includes('|') && answer.split('|').some(a => a.trim() === input))) {
+                    blank.classList.add('correct');
+                    blank.classList.remove('wrong');
+                } else {
+                    blank.classList.add('wrong');
+                    blank.classList.remove('correct');
+                    allCorrect = false;
+                }
+            });
+            
+            const resultBox = document.getElementById('fillResultBox');
+            const resultTitle = document.getElementById('fillResultTitle');
+            const resultText = document.getElementById('fillResultText');
+            
+            document.getElementById('fillResult').classList.remove('hidden');
+            
+            if (allCorrect) {
+                resultBox.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
+                resultTitle.textContent = '✅ 全部正确！';
+                resultTitle.className = 'font-medium mb-1 text-green-800';
+                resultText.textContent = '太棒了，继续下一张！';
+                resultText.className = 'text-sm text-green-700';
+                
+                streak++;
+                updateStreak();
+                recordHistory(filteredCards()[currentIndex % filteredCards().length].id, true);
+                
+                setTimeout(() => nextFill(), 1500);
+            } else {
+                resultBox.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                resultTitle.textContent = '❌ 有错误';
+                resultTitle.className = 'font-medium mb-1 text-red-800';
+                resultText.textContent = '红色标注处答案不正确，再想想？';
+                resultText.className = 'text-sm text-red-700';
+                
+                streak = 0;
+                updateStreak();
+                recordHistory(filteredCards()[currentIndex % filteredCards().length].id, false);
+            }
+            
+            updateStats();
+        }
+
+        function nextFill() {
+            currentIndex++;
+            loadFillCard(filteredCards()[currentIndex % filteredCards().length]);
+        }
+
+        // ==================== Write Mode ====================
+        function loadWriteCard(card) {
+            if (!card.write) {
+                nextWrite();
+                return;
+            }
+            
+            document.getElementById('writeCategory').textContent = getCategoryName(card.category);
+            document.getElementById('writeCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
+            document.getElementById('writeQuestion').textContent = card.question;
+            document.getElementById('writeDescription').textContent = card.write.desc;
+            document.getElementById('writeHintText').textContent = card.write.hint;
+            document.getElementById('writeAnswer').textContent = card.write.answer;
+            
+            document.getElementById('writeInput').value = '';
+            document.getElementById('writeHint').classList.add('hidden');
+            document.getElementById('writeResult').classList.add('hidden');
+        }
+
+        function showWriteHint() {
+            document.getElementById('writeHint').classList.remove('hidden');
+        }
+
+        function checkWrite() {
+            const input = document.getElementById('writeInput').value.trim();
+            if (!input) {
+                alert('请先输入代码！');
+                return;
+            }
+            showWriteAnswer();
+        }
+
+        function showWriteAnswer() {
+            document.getElementById('writeResult').classList.remove('hidden');
+            streak++;
+            updateStreak();
+            recordHistory(filteredCards()[currentIndex % filteredCards().length].id, true);
+            updateStats();
+        }
+
+        function nextWrite() {
+            currentIndex++;
+            loadWriteCard(filteredCards()[currentIndex % filteredCards().length]);
+        }
+        // ==================== Choice Mode ====================
+        function loadChoiceCard(card) {
+            if (!card.choice) {
+                nextChoice();
+                return;
+            }
+            
+            document.getElementById('choiceCategory').textContent = getCategoryName(card.category);
+            document.getElementById('choiceCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
+            document.getElementById('choiceQuestion').innerHTML = card.choice.question.replace(/\n/g, '<br>');
+            
+            const optionsContainer = document.getElementById('choiceOptions');
+            optionsContainer.innerHTML = '';
+            
+            card.choice.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-slate-700 font-medium';
+                btn.innerHTML = `<span class="inline-block w-8 h-8 rounded-full bg-slate-100 text-slate-600 text-center leading-8 mr-3 text-sm font-bold">${String.fromCharCode(65 + idx)}</span>${opt}`;
+                btn.onclick = () => selectChoice(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+            
+            document.getElementById('choiceResult').classList.add('hidden');
+            selectedChoice = null;
+        }
+
+        let selectedChoice = null;
+
+        function selectChoice(index, btnElement) {
+            if (selectedChoice !== null) return;
+            selectedChoice = index;
+            
+            const card = filteredCards()[currentIndex % filteredCards().length];
+            const isCorrect = index === card.choice.correct;
+            
+            // Disable all buttons
+            document.querySelectorAll('#choiceOptions button').forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === card.choice.correct) {
+                    btn.classList.remove('border-slate-200', 'hover:border-blue-300', 'hover:bg-blue-50');
+                    btn.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
+                    btn.querySelector('span').classList.add('bg-green-200', 'text-green-800');
+                } else if (idx === index && !isCorrect) {
+                    btn.classList.remove('border-slate-200', 'hover:border-blue-300', 'hover:bg-blue-50');
+                    btn.classList.add('border-red-500', 'bg-red-50', 'text-red-800');
+                    btn.querySelector('span').classList.add('bg-red-200', 'text-red-800');
+                }
+            });
+            
+            const resultBox = document.getElementById('choiceResult');
+            resultBox.classList.remove('hidden');
+            
+            if (isCorrect) {
+                resultBox.className = 'mb-6 p-4 rounded-lg bg-green-50 border border-green-200';
+                document.getElementById('choiceResultTitle').textContent = '✅ 回答正确！';
+                document.getElementById('choiceResultTitle').className = 'font-medium mb-1 text-green-800';
+                streak++;
+                updateStreak();
+                recordHistory(card.id, true);
+                createConfetti();
+            } else {
+                resultBox.className = 'mb-6 p-4 rounded-lg bg-red-50 border border-red-200';
+                document.getElementById('choiceResultTitle').textContent = '❌ 回答错误';
+                document.getElementById('choiceResultTitle').className = 'font-medium mb-1 text-red-800';
+                streak = 0;
+                updateStreak();
+                recordHistory(card.id, false);
+            }
+            
+            document.getElementById('choiceResultText').innerHTML = `<strong>解析：</strong>${card.choice.explanation}`;
+            document.getElementById('choiceResultText').className = 'text-sm text-slate-700';
+            
+            updateStats();
+        }
+
+        function nextChoice() {
+            currentIndex++;
+            loadChoiceCard(filteredCards()[currentIndex % filteredCards().length]);
+        }
+
+        // ==================== Utilities ====================
+        function getCategoryName(id) {
+            const cat = categories.find(c => c.id === id);
+            return cat ? cat.name : id;
+        }
+
+        function updateStreak() {
+            const el = document.getElementById('streakCount');
+            el.textContent = streak;
+            el.classList.remove('streak-pop');
+            void el.offsetWidth; // Trigger reflow
+            el.classList.add('streak-pop');
+        }
+
+        function recordHistory(cardId, correct) {
+            if (!cardHistory[cardId]) {
+                cardHistory[cardId] = { attempts: 0, correct: 0 };
+            }
+            cardHistory[cardId].attempts++;
+            if (correct) cardHistory[cardId].correct++;
+            localStorage.setItem('cardHistory', JSON.stringify(cardHistory));
+        }
+
+        function showEmptyState() {
+            const containers = ['flipContainer', 'fillContainer', 'writeContainer', 'choiceContainer'];
+            containers.forEach(id => document.getElementById(id).classList.add('hidden'));
+            
+            const main = document.querySelector('main');
+            if (!document.getElementById('emptyState')) {
+                const empty = document.createElement('div');
+                empty.id = 'emptyState';
+                empty.className = 'bg-white rounded-2xl border border-slate-200 p-12 text-center';
+                empty.innerHTML = `
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">该分类下暂无卡片</h3>
+                    <p class="text-slate-500 mb-6">请切换其他分类或添加更多学习内容</p>
+                    <button onclick="setCategory('all')" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                        查看全部卡片
+                    </button>
+                `;
+                main.insertBefore(empty, main.children[2]);
+            }
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        // ==================== Confetti Effect ====================
+        function createConfetti() {
+            const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                const duration = 2 + Math.random() * 2;
+                confetti.style.transition = `top ${duration}s ease-in, transform ${duration}s ease-in, opacity ${duration}s ease-in`;
+                
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.style.top = '100vh';
+                    confetti.style.transform = `rotate(${Math.random() * 720}deg)`;
+                    confetti.style.opacity = '0';
+                }, 50);
+                
+                setTimeout(() => confetti.remove(), duration * 1000);
+            }
+        }
+
+        // ==================== Keyboard Shortcuts ====================
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+                
+                switch(e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        if (currentMode === 'flip') flipCard();
+                        break;
+                    case 'ArrowRight':
+                        if (currentMode === 'flip') nextCard();
+                        else if (currentMode === 'fill') nextFill();
+                        else if (currentMode === 'write') nextWrite();
+                        else if (currentMode === 'choice') nextChoice();
+                        break;
+                    case 'ArrowLeft':
+                        if (currentMode === 'flip') prevCard();
+                        break;
+                    case 'h':
+                    case 'H':
+                        if (currentMode === 'flip') showHint();
+                        else if (currentMode === 'fill') showFillHint();
+                        else if (currentMode === 'write') showWriteHint();
+                        break;
+                    case 'Enter':
+                        if (currentMode === 'fill') checkFill();
+                        else if (currentMode === 'write') checkWrite();
+                        break;
+                }
+            });
+        }
+
+        // ==================== Data Persistence Helpers ====================
+        function resetProgress() {
+            if (confirm('确定要重置所有学习进度吗？此操作不可撤销。')) {
+                masteredCards.clear();
+                cardHistory = {};
+                localStorage.removeItem('masteredCards');
+                localStorage.removeItem('cardHistory');
+                streak = 0;
+                updateStreak();
+                updateStats();
+                renderCategoryNav();
+                currentIndex = 0;
+                loadCard();
+            }
+        }
+
+        // Add reset button to header (hidden by default, can be triggered via console)
+        window.resetProgress = resetProgress;
+
+        // ==================== Start ====================
+        init();
+    </script>
+</body>
+</html>
