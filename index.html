@@ -1,4 +1,8 @@
-<!DOCTYPE html>
+
+# 生成完整的增强版 index.html，包含填空和朗读功能
+# 由于代码超过输出限制，我将分段生成并保存到文件
+
+html_part1 = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -9,59 +13,57 @@
     <style>
         * { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* 3D Card Flip */
         .perspective-1000 { perspective: 1000px; }
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-        
-        /* Smooth transitions */
-        .card-inner {
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        /* Custom scrollbar */
+        .card-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Input styles */
         .fill-blank {
             border-bottom: 2px solid #e2e8f0;
-            background: transparent;
+            background: #f8fafc;
+            border-radius: 4px;
+            padding: 2px 8px;
+            min-width: 80px;
+            display: inline-block;
+            text-align: center;
             transition: all 0.3s;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
         }
         .fill-blank:focus {
             outline: none;
             border-bottom-color: #3b82f6;
+            background: #eff6ff;
         }
         .fill-blank.correct {
             border-bottom-color: #22c55e;
+            background: #f0fdf4;
             color: #15803d;
         }
         .fill-blank.wrong {
             border-bottom-color: #ef4444;
+            background: #fef2f2;
             color: #dc2626;
         }
-        
-        /* Progress bar animation */
+        .fill-blank.hint-revealed {
+            border-bottom-color: #f59e0b;
+            background: #fffbeb;
+            color: #92400e;
+        }
         @keyframes progressPulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
         .progress-pulse { animation: progressPulse 2s infinite; }
-        
-        /* Streak animation */
         @keyframes streakPop {
             0% { transform: scale(1); }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
         .streak-pop { animation: streakPop 0.3s ease; }
-        
-        /* Code block styling */
         .code-block {
             background: #1e293b;
             color: #e2e8f0;
@@ -71,15 +73,11 @@
             font-size: 0.875rem;
             line-height: 1.7;
         }
-        
-        /* Hint reveal animation */
         @keyframes hintReveal {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .hint-animate { animation: hintReveal 0.3s ease; }
-        
-        /* Confetti */
         .confetti {
             position: fixed;
             width: 10px;
@@ -87,64 +85,94 @@
             pointer-events: none;
             z-index: 9999;
         }
+        /* TTS button styles */
+        .tts-btn {
+            transition: all 0.2s;
+        }
+        .tts-btn:hover {
+            transform: scale(1.1);
+        }
+        .tts-btn.speaking {
+            animation: ttsPulse 1s infinite;
+            color: #3b82f6;
+        }
+        @keyframes ttsPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        /* Fill mode specific */
+        .fill-question-text {
+            line-height: 2.2;
+            font-size: 1.1rem;
+        }
+        .blank-wrapper {
+            display: inline-block;
+            margin: 0 2px;
+            vertical-align: middle;
+        }
+        .blank-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-align: center;
+            margin-bottom: 2px;
+        }
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+            .fill-blank { min-width: 60px; font-size: 0.85em; }
+            .fill-question-text { font-size: 1rem; line-height: 2; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
 
     <!-- Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
                     八
                 </div>
                 <div>
-                    <h1 class="font-bold text-slate-800 text-lg">前端八股文背诵卡</h1>
+                    <h1 class="font-bold text-slate-800 text-base sm:text-lg">前端八股文背诵卡</h1>
                     <p class="text-xs text-slate-500">AI 辅助记忆 · 多模式训练</p>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-6">
-                <div class="text-right hidden sm:block">
-                    <div class="text-xs text-slate-500 mb-1">今日进度</div>
-                    <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div id="totalProgress" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-200">
-                    <span class="text-lg">🔥</span>
-                    <span id="streakCount" class="font-bold text-orange-600">0</span>
-                    <span class="text-xs text-orange-500">连击</span>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTTS()" id="ttsToggle" class="tts-btn p-2 rounded-lg hover:bg-slate-100 text-slate-600" title="朗读开关">
+                    🔊
+                </button>
+                <div class="flex items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-200">
+                    <span class="text-base">🔥</span>
+                    <span id="streakCount" class="font-bold text-orange-600 text-sm">0</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="max-w-6xl mx-auto px-4 py-6 flex gap-6">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-6">
         
         <!-- Sidebar -->
-        <aside class="w-64 hidden lg:block shrink-0">
-            <div class="bg-white rounded-2xl border border-slate-200 p-4 sticky top-24">
-                <h3 class="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wider">知识分类</h3>
-                <nav class="space-y-1" id="categoryNav">
-                    <!-- Generated by JS -->
-                </nav>
-                
-                <div class="mt-6 pt-6 border-t border-slate-100">
-                    <h3 class="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wider">背诵模式</h3>
-                    <div class="space-y-2">
-                        <button onclick="setMode('flip')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors bg-blue-50 text-blue-700 font-medium" data-mode="flip">
-                            🔄 翻转卡片
-                        </button>
-                        <button onclick="setMode('fill')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="fill">
-                            ✏️ 填空挑战
-                        </button>
-                        <button onclick="setMode('write')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="write">
-                            📝 默写模式
-                        </button>
-                        <button onclick="setMode('choice')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="choice">
-                            🎯 选择测试
-                        </button>
+        <aside class="w-56 lg:block shrink-0 hidden">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sticky top-20">
+                <h3 class="font-semibold text-slate-700 mb-3 text-xs uppercase tracking-wider">知识分类</h3>
+                <nav class="space-y-1" id="categoryNav"></nav>
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <h3 class="font-semibold text-slate-700 mb-2 text-xs uppercase tracking-wider">背诵模式</h3>
+                    <div class="space-y-1">
+                        <button onclick="setMode('flip')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors bg-blue-50 text-blue-700 font-medium" data-mode="flip">🔄 翻转卡片</button>
+                        <button onclick="setMode('fill')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="fill">✏️ 填空挑战</button>
+                        <button onclick="setMode('write')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="write">📝 默写模式</button>
+                        <button onclick="setMode('choice')" class="mode-btn w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-slate-50 text-slate-600" data-mode="choice">🎯 选择测试</button>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <div class="text-xs text-slate-500 mb-1">今日进度</div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div id="totalProgress" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span id="progressText">0/0</span>
+                        <span id="progressPercent">0%</span>
                     </div>
                 </div>
             </div>
@@ -154,23 +182,29 @@
         <main class="flex-1 min-w-0">
             
             <!-- Mobile Category Selector -->
-            <div class="lg:hidden mb-4 overflow-x-auto pb-2">
-                <div class="flex gap-2" id="mobileCategoryNav"></div>
+            <div class="lg:hidden mb-3 overflow-x-auto pb-2" id="mobileCategoryNav"></div>
+
+            <!-- Mobile Mode Selector -->
+            <div class="lg:hidden mb-3 flex gap-2 overflow-x-auto pb-2" id="mobileModeNav">
+                <button onclick="setMode('flip')" class="mode-btn-mobile shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap bg-blue-500 text-white" data-mode="flip">翻转</button>
+                <button onclick="setMode('fill')" class="mode-btn-mobile shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap bg-white border border-slate-200 text-slate-600" data-mode="fill">填空</button>
+                <button onclick="setMode('write')" class="mode-btn-mobile shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap bg-white border border-slate-200 text-slate-600" data-mode="write">默写</button>
+                <button onclick="setMode('choice')" class="mode-btn-mobile shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap bg-white border border-slate-200 text-slate-600" data-mode="choice">选择</button>
             </div>
 
             <!-- Stats Bar -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                    <div class="text-2xl font-bold text-blue-600" id="statTotal">0</div>
-                    <div class="text-xs text-slate-500 mt-1">总卡片</div>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                    <div class="text-xl font-bold text-blue-600" id="statTotal">0</div>
+                    <div class="text-xs text-slate-500 mt-0.5">总卡片</div>
                 </div>
-                <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                    <div class="text-2xl font-bold text-green-600" id="statMastered">0</div>
-                    <div class="text-xs text-slate-500 mt-1">已掌握</div>
+                <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                    <div class="text-xl font-bold text-green-600" id="statMastered">0</div>
+                    <div class="text-xs text-slate-500 mt-0.5">已掌握</div>
                 </div>
-                <div class="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                    <div class="text-2xl font-bold text-purple-600" id="statAccuracy">0%</div>
-                    <div class="text-xs text-slate-500 mt-1">正确率</div>
+                <div class="bg-white rounded-xl border border-slate-200 p-3 text-center">
+                    <div class="text-xl font-bold text-purple-600" id="statAccuracy">0%</div>
+                    <div class="text-xs text-slate-500 mt-0.5">正确率</div>
                 </div>
             </div>
 
@@ -179,40 +213,36 @@
                 
                 <!-- Flip Mode -->
                 <div id="flipContainer" class="mode-container">
-                    <div class="perspective-1000 h-[500px] cursor-pointer" onclick="flipCard()">
+                    <div class="perspective-1000 h-[420px] sm:h-[480px] cursor-pointer" onclick="flipCard()">
                         <div id="flipCardInner" class="card-inner relative w-full h-full transform-style-3d">
-                            <!-- Front -->
-                            <div class="absolute inset-0 backface-hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col">
-                                <div class="flex items-center justify-between mb-6">
+                            <div class="absolute inset-0 backface-hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 flex flex-col">
+                                <div class="flex items-center justify-between mb-4">
                                     <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full" id="flipCategory">JavaScript</span>
-                                    <span class="text-slate-400 text-sm">点击翻转 →</span>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="event.stopPropagation(); speakText(document.getElementById('flipQuestion').textContent)" class="tts-btn p-1.5 rounded-lg hover:bg-slate-100 text-slate-400" title="朗读题目">🔊</button>
+                                        <span class="text-slate-400 text-xs">点击翻转 →</span>
+                                    </div>
                                 </div>
-                                <div class="flex-1 flex items-center justify-center">
-                                    <h2 class="text-2xl font-bold text-slate-800 text-center leading-relaxed" id="flipQuestion">
-                                        什么是闭包？请解释其原理和应用场景。
-                                    </h2>
+                                <div class="flex-1 flex items-center justify-center overflow-y-auto">
+                                    <h2 class="text-lg sm:text-xl font-bold text-slate-800 text-center leading-relaxed px-2" id="flipQuestion">什么是闭包？请解释其原理和应用场景。</h2>
                                 </div>
-                                <div class="flex items-center justify-between text-sm text-slate-400">
+                                <div class="flex items-center justify-between text-xs text-slate-400 mt-4">
                                     <span id="flipCounter">1 / 10</span>
-                                    <button onclick="event.stopPropagation(); showHint()" class="text-blue-500 hover:text-blue-600 font-medium">
-                                        💡 提示
-                                    </button>
+                                    <button onclick="event.stopPropagation(); showHint()" class="text-blue-500 hover:text-blue-600 font-medium text-sm">💡 提示</button>
                                 </div>
                             </div>
-                            <!-- Back -->
-                            <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-8 flex flex-col text-white">
-                                <div class="flex items-center justify-between mb-6">
+                            <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-5 sm:p-6 flex flex-col text-white">
+                                <div class="flex items-center justify-between mb-4">
                                     <span class="px-3 py-1 bg-white/10 text-blue-300 text-xs font-medium rounded-full">答案解析</span>
-                                    <button onclick="event.stopPropagation(); markMastered()" class="px-4 py-1.5 bg-green-500 hover:bg-green-600 rounded-lg text-sm font-medium transition-colors">
-                                        ✓ 已掌握
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="event.stopPropagation(); speakAnswer()" class="tts-btn p-1.5 rounded-lg hover:bg-white/10 text-slate-300" title="朗读答案">🔊</button>
+                                        <button onclick="event.stopPropagation(); markMastered()" class="px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded-lg text-xs font-medium transition-colors">✓ 已掌握</button>
+                                    </div>
                                 </div>
-                                <div class="flex-1 overflow-y-auto pr-2" id="flipAnswer">
-                                    <!-- Content injected by JS -->
-                                </div>
+                                <div class="flex-1 overflow-y-auto pr-2 text-sm" id="flipAnswer"></div>
                                 <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                                    <button onclick="event.stopPropagation(); prevCard()" class="text-slate-400 hover:text-white transition-colors">← 上一张</button>
-                                    <button onclick="event.stopPropagation(); nextCard()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors">下一张 →</button>
+                                    <button onclick="event.stopPropagation(); prevCard()" class="text-slate-400 hover:text-white transition-colors text-sm">← 上一张</button>
+                                    <button onclick="event.stopPropagation(); nextCard()" class="px-5 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-colors text-sm">下一张 →</button>
                                 </div>
                             </div>
                         </div>
@@ -221,95 +251,85 @@
 
                 <!-- Fill Mode -->
                 <div id="fillContainer" class="mode-container hidden">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                        <div class="flex items-center justify-between mb-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                        <div class="flex items-center justify-between mb-4">
                             <span class="px-3 py-1 bg-purple-50 text-purple-600 text-xs font-medium rounded-full" id="fillCategory">JavaScript</span>
-                            <span class="text-slate-400 text-sm" id="fillCounter">1 / 10</span>
-                        </div>
-                        
-                        <div class="mb-8">
-                            <h3 class="text-lg font-semibold text-slate-700 mb-4">请补全以下代码/概念中的空缺部分：</h3>
-                            <div id="fillContent" class="text-slate-800 leading-loose text-lg">
-                                <!-- Content with blanks injected by JS -->
+                            <div class="flex items-center gap-2">
+                                <button onclick="speakText(document.getElementById('fillQuestionText').textContent)" class="tts-btn p-1.5 rounded-lg hover:bg-slate-100 text-slate-400" title="朗读题目">🔊</button>
+                                <span class="text-slate-400 text-xs" id="fillCounter">1 / 10</span>
                             </div>
                         </div>
+                        
+                        <div class="mb-6">
+                            <div class="flex items-center gap-2 mb-3">
+                                <h3 class="text-sm font-semibold text-slate-700">请补全以下概念中的空缺部分：</h3>
+                                <button onclick="speakFillQuestion()" class="tts-btn p-1 rounded hover:bg-slate-100 text-slate-400 text-xs" title="朗读完整题目">🔊</button>
+                            </div>
+                            <div id="fillContent" class="fill-question-text text-slate-800 bg-slate-50 rounded-xl p-4 sm:p-5"></div>
+                        </div>
 
-                        <div id="fillHint" class="hidden mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg hint-animate">
+                        <div id="fillHint" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg hint-animate">
                             <div class="flex items-start gap-2">
-                                <span class="text-amber-500 text-lg">💡</span>
+                                <span class="text-amber-500">💡</span>
                                 <div>
-                                    <div class="font-medium text-amber-800 text-sm mb-1">提示</div>
+                                    <div class="font-medium text-amber-800 text-xs mb-0.5">提示</div>
                                     <div class="text-amber-700 text-sm" id="fillHintText"></div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-3">
-                            <button onclick="checkFill()" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
-                                检查答案
-                            </button>
-                            <button onclick="showFillHint()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors">
-                                提示
-                            </button>
-                            <button onclick="nextFill()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors ml-auto">
-                                跳过 →
-                            </button>
+                        <div id="fillResult" class="hidden mb-4">
+                            <div class="p-3 rounded-lg" id="fillResultBox">
+                                <div class="font-medium text-sm mb-1" id="fillResultTitle"></div>
+                                <div class="text-xs opacity-90" id="fillResultText"></div>
+                            </div>
                         </div>
 
-                        <div id="fillResult" class="mt-4 hidden">
-                            <div class="p-4 rounded-lg" id="fillResultBox">
-                                <div class="font-medium mb-1" id="fillResultTitle"></div>
-                                <div class="text-sm opacity-90" id="fillResultText"></div>
-                            </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="checkFill()" class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors text-sm">检查答案</button>
+                            <button onclick="showFillHint()" class="px-5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors text-sm">💡 提示</button>
+                            <button onclick="revealAllBlanks()" class="px-5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors text-sm">👁️ 显示答案</button>
+                            <button onclick="nextFill()" class="px-5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors text-sm ml-auto">跳过 →</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Write Mode -->
                 <div id="writeContainer" class="mode-container hidden">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                        <div class="flex items-center justify-between mb-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                        <div class="flex items-center justify-between mb-4">
                             <span class="px-3 py-1 bg-green-50 text-green-600 text-xs font-medium rounded-full" id="writeCategory">JavaScript</span>
                             <div class="flex items-center gap-2">
-                                <button onclick="showWriteHint()" class="text-sm text-blue-500 hover:text-blue-600 font-medium">💡 提示</button>
-                                <span class="text-slate-400 text-sm" id="writeCounter">1 / 10</span>
+                                <button onclick="speakText(document.getElementById('writeQuestion').textContent)" class="tts-btn p-1.5 rounded-lg hover:bg-slate-100 text-slate-400" title="朗读题目">🔊</button>
+                                <span class="text-slate-400 text-xs" id="writeCounter">1 / 10</span>
                             </div>
                         </div>
 
-                        <div class="mb-6">
-                            <h3 class="text-xl font-bold text-slate-800 mb-2" id="writeQuestion">手写 Promise.all</h3>
+                        <div class="mb-4">
+                            <h3 class="text-lg font-bold text-slate-800 mb-1" id="writeQuestion">手写 Promise.all</h3>
                             <p class="text-slate-500 text-sm" id="writeDescription">请默写实现代码，尽量完整。</p>
                         </div>
 
-                        <div id="writeHint" class="hidden mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hint-animate">
+                        <div id="writeHint" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg hint-animate">
                             <div class="text-sm text-blue-700" id="writeHintText"></div>
                         </div>
 
-                        <textarea 
-                            id="writeInput" 
-                            class="w-full h-64 p-4 bg-slate-50 border border-slate-200 rounded-xl mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="// 在此输入你的代码..."
-                        ></textarea>
+                        <textarea id="writeInput" class="w-full h-56 p-4 bg-slate-50 border border-slate-200 rounded-xl mono text-sm leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="// 在此输入你的代码..."></textarea>
 
-                        <div class="flex items-center gap-3 mt-4">
-                            <button onclick="checkWrite()" class="px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
-                                提交检查
-                            </button>
-                            <button onclick="showWriteAnswer()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors">
-                                查看答案
-                            </button>
-                            <button onclick="nextWrite()" class="px-6 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors ml-auto">
-                                下一题 →
-                            </button>
+                        <div class="flex flex-wrap items-center gap-2 mt-4">
+                            <button onclick="checkWrite()" class="px-5 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors text-sm">提交检查</button>
+                            <button onclick="showWriteHint()" class="px-5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors text-sm">💡 提示</button>
+                            <button onclick="showWriteAnswer()" class="px-5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors text-sm">查看答案</button>
+                            <button onclick="nextWrite()" class="px-5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg font-medium transition-colors text-sm ml-auto">下一题 →</button>
                         </div>
 
-                        <div id="writeResult" class="mt-6 hidden">
+                        <div id="writeResult" class="mt-4 hidden">
                             <div class="border border-slate-200 rounded-xl overflow-hidden">
-                                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                                <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
                                     <span class="font-medium text-slate-700 text-sm">参考答案</span>
-                                    <span class="text-xs text-slate-400">对比你的实现</span>
+                                    <button onclick="speakText(document.getElementById('writeAnswer').textContent)" class="tts-btn p-1 rounded hover:bg-slate-200 text-slate-400 text-xs">🔊 朗读</button>
                                 </div>
-                                <pre class="code-block m-0 rounded-none" id="writeAnswer"></pre>
+                                <pre class="code-block m-0 rounded-none text-xs sm:text-sm" id="writeAnswer"></pre>
                             </div>
                         </div>
                     </div>
@@ -317,28 +337,27 @@
 
                 <!-- Choice Mode -->
                 <div id="choiceContainer" class="mode-container hidden">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                        <div class="flex items-center justify-between mb-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+                        <div class="flex items-center justify-between mb-4">
                             <span class="px-3 py-1 bg-orange-50 text-orange-600 text-xs font-medium rounded-full" id="choiceCategory">浏览器</span>
-                            <span class="text-slate-400 text-sm" id="choiceCounter">1 / 10</span>
-                        </div>
-
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold text-slate-800 mb-6" id="choiceQuestion">以下关于 Event Loop 的说法，正确的是？</h3>
-                            <div class="space-y-3" id="choiceOptions">
-                                <!-- Options injected by JS -->
+                            <div class="flex items-center gap-2">
+                                <button onclick="speakText(document.getElementById('choiceQuestion').textContent)" class="tts-btn p-1.5 rounded-lg hover:bg-slate-100 text-slate-400" title="朗读题目">🔊</button>
+                                <span class="text-slate-400 text-xs" id="choiceCounter">1 / 10</span>
                             </div>
                         </div>
 
-                        <div id="choiceResult" class="hidden mb-6 p-4 rounded-lg" id="choiceResultBox">
-                            <div class="font-medium mb-1" id="choiceResultTitle"></div>
-                            <div class="text-sm" id="choiceResultText"></div>
+                        <div class="mb-6">
+                            <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-4 leading-relaxed" id="choiceQuestion"></h3>
+                            <div class="space-y-2.5" id="choiceOptions"></div>
+                        </div>
+
+                        <div id="choiceResult" class="hidden mb-4 p-3 rounded-lg" id="choiceResultBox">
+                            <div class="font-medium text-sm mb-1" id="choiceResultTitle"></div>
+                            <div class="text-xs" id="choiceResultText"></div>
                         </div>
 
                         <div class="flex justify-end">
-                            <button onclick="nextChoice()" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
-                                下一题 →
-                            </button>
+                            <button onclick="nextChoice()" class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors text-sm">下一题 →</button>
                         </div>
                     </div>
                 </div>
@@ -346,15 +365,27 @@
             </div>
 
             <!-- Keyboard Shortcuts -->
-            <div class="mt-6 text-center text-xs text-slate-400">
+            <div class="mt-4 text-center text-xs text-slate-400 hidden sm:block">
                 快捷键: <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Space</span> 翻转/下一题 
                 <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded ml-2">← →</span> 切换卡片
                 <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded ml-2">H</span> 提示
+                <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded ml-2">S</span> 朗读
             </div>
         </main>
     </div>
 
     <script>
+'''
+
+# Save first part
+with open('/mnt/agents/output/index_part1.html', 'w', encoding='utf-8') as f:
+    f.write(html_part1)
+
+print("Part 1 saved successfully")
+print(f"Length: {len(html_part1)} characters")
+
+# Continue with the data and core functions
+html_part2 = '''
         // ==================== Data ====================
         const categories = [
             { id: 'js', name: 'JavaScript 基础', icon: '⚡', count: 0 },
@@ -366,55 +397,31 @@
         ];
 
         const cards = [
-            // JavaScript
             {
                 id: 1,
                 category: 'js',
                 question: '什么是闭包？请解释其原理和应用场景。',
-                answer: `<div class="space-y-4">
-                    <p><strong>定义：</strong>闭包是指有权访问另一个函数作用域中的变量的函数。</p>
-                    <div class="code-block mono">function createCounter() {
-    let count = 0;
-    return function() {
-        return ++count;
-    };
-}
-const counter = createCounter();</div>
-                    <p><strong>原理：</strong>通过作用域链（Scope Chain）实现，内部函数持有外部函数的变量对象（VO），即使外部函数执行完毕，这些变量也不会被垃圾回收。</p>
-                    <p><strong>应用：</strong>数据私有化、柯里化、防抖节流、函数工厂。</p>
-                    <p><strong>注意：</strong>过度使用可能导致内存泄漏，特别是在循环中创建闭包时需注意 let 与 var 的区别。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">定义：</strong>闭包是指有权访问另一个函数作用域中的变量的函数。</p><div class="code-block mono text-xs">function createCounter() {\\n    let count = 0;\\n    return function() {\\n        return ++count;\\n    };\\n}\\nconst counter = createCounter();</div><p><strong class="text-blue-300">原理：</strong>通过作用域链实现，内部函数持有外部函数的变量对象，即使外部函数执行完毕，这些变量也不会被垃圾回收。</p><p><strong class="text-blue-300">应用：</strong>数据私有化、柯里化、防抖节流、函数工厂。</p><p><strong class="text-blue-300">注意：</strong>过度使用可能导致内存泄漏。</p></div>`,
                 fill: {
-                    text: '闭包是指有权访问另一个<span class="blank" data-answer="函数作用域">_____</span>中的变量的函数。其核心原理是通过<span class="blank" data-answer="作用域链">_____</span>实现，即使外部函数执行完毕，内部函数仍可访问外部变量。常见应用包括<span class="blank" data-answer="防抖节流">_____</span>、<span class="blank" data-answer="数据私有化">_____</span>等。使用时需注意<span class="blank" data-answer="内存泄漏">_____</span>风险。',
+                    text: [
+                        { type: 'text', content: '闭包是指有权访问另一个' },
+                        { type: 'blank', answer: '函数作用域', hint: '不是全局作用域' },
+                        { type: 'text', content: '中的变量的函数。其核心原理是通过' },
+                        { type: 'blank', answer: '作用域链', hint: 'Scope Chain' },
+                        { type: 'text', content: '实现，即使外部函数执行完毕，内部函数仍可访问外部变量。常见应用包括' },
+                        { type: 'blank', answer: '防抖节流', hint: '性能优化相关' },
+                        { type: 'text', content: '、' },
+                        { type: 'blank', answer: '数据私有化', hint: '封装隐藏数据' },
+                        { type: 'text', content: '等。使用时需注意' },
+                        { type: 'blank', answer: '内存泄漏', hint: '垃圾回收相关' },
+                        { type: 'text', content: '风险。' }
+                    ],
                     hint: '想想函数执行完毕后，为什么变量还能被访问？'
                 },
                 write: {
                     desc: '请手写一个防抖函数（debounce），要求支持立即执行选项和取消功能。',
                     hint: '核心：定时器 + 时间戳；注意 this 指向和参数传递',
-                    answer: `function debounce(fn, delay, immediate = false) {
-    let timer = null;
-    
-    function debounced(...args) {
-        const context = this;
-        const callNow = immediate && !timer;
-        
-        clearTimeout(timer);
-        
-        timer = setTimeout(() => {
-            timer = null;
-            if (!immediate) fn.apply(context, args);
-        }, delay);
-        
-        if (callNow) fn.apply(context, args);
-    }
-    
-    debounced.cancel = () => {
-        clearTimeout(timer);
-        timer = null;
-    };
-    
-    return debounced;
-}`
+                    answer: `function debounce(fn, delay, immediate = false) {\\n    let timer = null;\\n    \\n    function debounced(...args) {\\n        const context = this;\\n        const callNow = immediate && !timer;\\n        \\n        clearTimeout(timer);\\n        \\n        timer = setTimeout(() => {\\n            timer = null;\\n            if (!immediate) fn.apply(context, args);\\n        }, delay);\\n        \\n        if (callNow) fn.apply(context, args);\\n    }\\n    \\n    debounced.cancel = () => {\\n        clearTimeout(timer);\\n        timer = null;\\n    };\\n    \\n    return debounced;\\n}`
                 },
                 choice: {
                     question: '以下关于闭包的说法，错误的是？',
@@ -433,40 +440,32 @@ const counter = createCounter();</div>
                 id: 2,
                 category: 'js',
                 question: '解释 Event Loop 中宏任务与微任务的执行顺序。',
-                answer: `<div class="space-y-4">
-                    <p><strong>执行顺序：</strong>同步代码 → 微任务队列清空 → 宏任务队列取一个执行 → 重复。</p>
-                    <div class="code-block mono">console.log('1'); // 同步
-setTimeout(() => console.log('2'), 0); // 宏任务
-Promise.resolve().then(() => console.log('3')); // 微任务
-console.log('4'); // 同步
-// 输出: 1 4 3 2</div>
-                    <p><strong>微任务：</strong>Promise.then/catch/finally、MutationObserver、queueMicrotask。</p>
-                    <p><strong>宏任务：</strong>setTimeout/setInterval、setImmediate(Node)、I/O、UI rendering。</p>
-                    <p><strong>Node.js 差异：</strong>分为 6 个 phases（timers → pending → idle → poll → check → close），每个 phase 结束后执行微任务。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">执行顺序：</strong>同步代码 → 微任务队列清空 → 宏任务队列取一个执行 → 重复。</p><div class="code-block mono text-xs">console.log('1'); // 同步\\nsetTimeout(() => console.log('2'), 0); // 宏任务\\nPromise.resolve().then(() => console.log('3')); // 微任务\\nconsole.log('4'); // 同步\\n// 输出: 1 4 3 2</div><p><strong class="text-blue-300">微任务：</strong>Promise.then/catch/finally、MutationObserver、queueMicrotask。</p><p><strong class="text-blue-300">宏任务：</strong>setTimeout/setInterval、setImmediate(Node)、I/O、UI rendering。</p><p><strong class="text-blue-300">Node.js 差异：</strong>分为 6 个 phases（timers → pending → idle → poll → check → close）。</p></div>`,
                 fill: {
-                    text: 'Event Loop 执行顺序：首先执行所有<span class="blank" data-answer="同步代码">_____</span>，然后清空<span class="blank" data-answer="微任务">_____</span>队列，最后从<span class="blank" data-answer="宏任务">_____</span>队列中取一个任务执行。Promise.then 属于<span class="blank" data-answer="微任务">_____</span>，setTimeout 属于<span class="blank" data-answer="宏任务">_____</span>。',
+                    text: [
+                        { type: 'text', content: 'Event Loop 执行顺序：首先执行所有' },
+                        { type: 'blank', answer: '同步代码', hint: '最先执行的' },
+                        { type: 'text', content: '，然后清空' },
+                        { type: 'blank', answer: '微任务', hint: 'Promise 属于这个' },
+                        { type: 'text', content: '队列，最后从' },
+                        { type: 'blank', answer: '宏任务', hint: 'setTimeout 属于这个' },
+                        { type: 'text', content: '队列中取一个任务执行。Promise.then 属于' },
+                        { type: 'blank', answer: '微任务', hint: '比 setTimeout 快' },
+                        { type: 'text', content: '，setTimeout 属于' },
+                        { type: 'blank', answer: '宏任务', hint: '会进入回调队列' },
+                        { type: 'text', content: '。' }
+                    ],
                     hint: '记住 Promise 比 setTimeout 快'
                 },
                 write: {
                     desc: '请写出以下代码的输出顺序，并解释原因。',
                     hint: '先标出每个任务是宏任务还是微任务',
-                    answer: `console.log('1');
-setTimeout(() => console.log('2'), 0);
-Promise.resolve().then(() => console.log('3'));
-console.log('4');
-
-// 输出: 1 4 3 2
-
-// 解析：
-// 1. 同步代码: 1, 4
-// 2. 微任务: Promise.then → 3  
-// 3. 宏任务: setTimeout → 2`
+                    answer: `console.log('1');\\nsetTimeout(() => console.log('2'), 0);\\nPromise.resolve().then(() => console.log('3'));\\nconsole.log('4');\\n\\n// 输出: 1 4 3 2\\n\\n// 解析：\\n// 1. 同步代码: 1, 4\\n// 2. 微任务: Promise.then → 3  \\n// 3. 宏任务: setTimeout → 2`
                 },
                 choice: {
-                    question: '以下代码的输出顺序是？\nconsole.log("1"); Promise.resolve().then(() => console.log("2")); setTimeout(() => console.log("3"), 0); console.log("4");',
+                    question: '以下代码的输出顺序是？\\nconsole.log("1"); Promise.resolve().then(() => console.log("2")); setTimeout(() => console.log("3"), 0); console.log("4");',
                     options: ['1 2 3 4', '1 4 2 3', '1 4 3 2', '1 2 4 3'],
-                    correct: 1,
+                    correct: 2,
                     explanation: '同步代码(1,4) → 微任务 Promise(2) → 宏任务 setTimeout(3)'
                 },
                 hint: '记住"同步 > 微任务 > 宏任务"'
@@ -475,41 +474,23 @@ console.log('4');
                 id: 3,
                 category: 'js',
                 question: '手写 new 操作符的实现。',
-                answer: `<div class="space-y-4">
-                    <p><strong>new 操作符做了四件事：</strong></p>
-                    <ol class="list-decimal list-inside space-y-1 text-slate-300">
-                        <li>创建空对象</li>
-                        <li>链接到原型</li>
-                        <li>绑定 this 执行构造函数</li>
-                        <li>返回对象（若构造函数无返回值或返回非对象）</li>
-                    </ol>
-                    <div class="code-block mono">function myNew(ctor, ...args) {
-    const obj = Object.create(ctor.prototype);
-    const result = ctor.apply(obj, args);
-    return (result !== null && 
-           (typeof result === 'object' || typeof result === 'function')) 
-           ? result : obj;
-}</div>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">new 四件事：</strong></p><ol class="list-decimal list-inside space-y-1 text-slate-300"><li>创建空对象</li><li>链接到原型</li><li>绑定 this 执行构造函数</li><li>返回对象（若构造函数无返回值或返回非对象）</li></ol><div class="code-block mono text-xs">function myNew(ctor, ...args) {\\n    const obj = Object.create(ctor.prototype);\\n    const result = ctor.apply(obj, args);\\n    return (result !== null && \\n           (typeof result === 'object' || typeof result === 'function')) \\n           ? result : obj;\\n}</div></div>`,
                 fill: {
-                    text: 'new 操作符的实现步骤：1. 创建空对象并链接到构造函数的<span class="blank" data-answer="prototype">_____</span>；2. 将构造函数中的<span class="blank" data-answer="this">_____</span>绑定到这个新对象；3. 执行构造函数；4. 若构造函数返回非对象，则返回<span class="blank" data-answer="新对象">_____</span>。',
+                    text: [
+                        { type: 'text', content: 'new 操作符的实现步骤：1. 创建空对象并链接到构造函数的' },
+                        { type: 'blank', answer: 'prototype', hint: '原型对象' },
+                        { type: 'text', content: '；2. 将构造函数中的' },
+                        { type: 'blank', answer: 'this', hint: '执行上下文' },
+                        { type: 'text', content: '绑定到这个新对象；3. 执行构造函数；4. 若构造函数返回非对象，则返回' },
+                        { type: 'blank', answer: '新对象', hint: '默认返回' },
+                        { type: 'text', content: '。' }
+                    ],
                     hint: 'new 的核心是原型链继承 + this 绑定'
                 },
                 write: {
                     desc: '请手写实现 new 操作符。',
                     hint: 'Object.create + apply + 判断返回值类型',
-                    answer: `function myNew(constructor, ...args) {
-    // 1. 创建对象，继承构造函数原型
-    const obj = Object.create(constructor.prototype);
-    
-    // 2. 执行构造函数，绑定 this
-    const result = constructor.apply(obj, args);
-    
-    // 3. 判断返回值
-    return (result !== null && 
-           (typeof result === 'object' || typeof result === 'function')) 
-           ? result : obj;
-}`
+                    answer: `function myNew(constructor, ...args) {\\n    // 1. 创建对象，继承构造函数原型\\n    const obj = Object.create(constructor.prototype);\\n    \\n    // 2. 执行构造函数，绑定 this\\n    const result = constructor.apply(obj, args);\\n    \\n    // 3. 判断返回值\\n    return (result !== null && \\n           (typeof result === 'object' || typeof result === 'function')) \\n           ? result : obj;\\n}`
                 },
                 choice: {
                     question: 'new 操作符不会执行以下哪个步骤？',
@@ -528,41 +509,28 @@ console.log('4');
                 id: 4,
                 category: 'js',
                 question: 'this 的四种绑定规则是什么？箭头函数有何不同？',
-                answer: `<div class="space-y-4">
-                    <p><strong>四种绑定规则（优先级从高到低）：</strong></p>
-                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
-                        <li><strong>new 绑定：</strong>new Foo() → this 指向新对象</li>
-                        <li><strong>显式绑定：</strong>call/apply/bind → this 指向指定对象</li>
-                        <li><strong>隐式绑定：</strong>obj.foo() → this 指向 obj</li>
-                        <li><strong>默认绑定：</strong>foo() → this 指向全局（严格模式 undefined）</li>
-                    </ol>
-                    <p><strong>箭头函数：</strong>没有自己的 this，继承外层作用域的 this，且不可被 call/apply/bind 改变。</p>
-                    <div class="code-block mono">const obj = {
-    name: 'obj',
-    regular: function() { console.log(this.name); },
-    arrow: () => console.log(this.name)
-};
-obj.regular(); // 'obj'
-obj.arrow();   // undefined（继承全局/外层 this）</div>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">四种绑定规则（优先级从高到低）：</strong></p><ol class="list-decimal list-inside space-y-2 text-slate-300"><li><strong>new 绑定：</strong>new Foo() → this 指向新对象</li><li><strong>显式绑定：</strong>call/apply/bind → this 指向指定对象</li><li><strong>隐式绑定：</strong>obj.foo() → this 指向 obj</li><li><strong>默认绑定：</strong>foo() → this 指向全局（严格模式 undefined）</li></ol><p><strong class="text-blue-300">箭头函数：</strong>没有自己的 this，继承外层作用域的 this，且不可被 call/apply/bind 改变。</p></div>`,
                 fill: {
-                    text: 'this 绑定优先级：new 绑定 > <span class="blank" data-answer="显式绑定">_____</span> > <span class="blank" data-answer="隐式绑定">_____</span> > <span class="blank" data-answer="默认绑定">_____</span>。箭头函数没有自己的 this，它会继承<span class="blank" data-answer="外层作用域">_____</span>的 this。',
+                    text: [
+                        { type: 'text', content: 'this 绑定优先级：new 绑定 > ' },
+                        { type: 'blank', answer: '显式绑定', hint: 'call/apply/bind' },
+                        { type: 'text', content: ' > ' },
+                        { type: 'blank', answer: '隐式绑定', hint: 'obj.method()' },
+                        { type: 'text', content: ' > ' },
+                        { type: 'blank', answer: '默认绑定', hint: '直接调用' },
+                        { type: 'text', content: '。箭头函数没有自己的 this，它会继承' },
+                        { type: 'blank', answer: '外层作用域', hint: '定义时的上下文' },
+                        { type: 'text', content: '的 this。' }
+                    ],
                     hint: '记住"硬绑定"（bind）优先级很高'
                 },
                 write: {
                     desc: '请手写 call 的实现。',
                     hint: '将函数作为对象的临时方法执行',
-                    answer: `Function.prototype.myCall = function(context, ...args) {
-    context = context || window;
-    const fnSymbol = Symbol('fn');
-    context[fnSymbol] = this;
-    const result = context[fnSymbol](...args);
-    delete context[fnSymbol];
-    return result;
-};`
+                    answer: `Function.prototype.myCall = function(context, ...args) {\\n    context = context || window;\\n    const fnSymbol = Symbol('fn');\\n    context[fnSymbol] = this;\\n    const result = context[fnSymbol](...args);\\n    delete context[fnSymbol];\\n    return result;\\n};`
                 },
                 choice: {
-                    question: '以下代码中 foo() 的 this 指向？\nfunction foo() { console.log(this.a); }\nvar a = 2;\nfoo();',
+                    question: '以下代码中 foo() 的 this 指向？\\nfunction foo() { console.log(this.a); }\\nvar a = 2;\\nfoo();',
                     options: ['window/全局对象', 'undefined', 'foo 自身', '抛出错误'],
                     correct: 0,
                     explanation: '直接调用 foo() 属于默认绑定，非严格模式下 this 指向全局对象。'
@@ -573,79 +541,27 @@ obj.arrow();   // undefined（继承全局/外层 this）</div>
                 id: 5,
                 category: 'js',
                 question: '手写 Promise（基础版）。',
-                answer: `<div class="space-y-4">
-                    <p><strong>核心要点：</strong>状态机（pending/fulfilled/rejected）、then 方法链式调用、异步执行回调。</p>
-                    <div class="code-block mono">class MyPromise {
-    constructor(executor) {
-        this.state = 'pending';
-        this.value = undefined;
-        this.reason = undefined;
-        this.onFulfilledCallbacks = [];
-        this.onRejectedCallbacks = [];
-        
-        const resolve = (value) => {
-            if (this.state === 'pending') {
-                this.state = 'fulfilled';
-                this.value = value;
-                this.onFulfilledCallbacks.forEach(fn => fn());
-            }
-        };
-        
-        const reject = (reason) => {
-            if (this.state === 'pending') {
-                this.state = 'rejected';
-                this.reason = reason;
-                this.onRejectedCallbacks.forEach(fn => fn());
-            }
-        };
-        
-        try {
-            executor(resolve, reject);
-        } catch (err) {
-            reject(err);
-        }
-    }
-    
-    then(onFulfilled, onRejected) {
-        // 简化版，实际需处理链式调用和 Promise 解析
-        if (this.state === 'fulfilled') {
-            onFulfilled(this.value);
-        }
-        if (this.state === 'rejected') {
-            onRejected(this.reason);
-        }
-        if (this.state === 'pending') {
-            this.onFulfilledCallbacks.push(() => onFulfilled(this.value));
-            this.onRejectedCallbacks.push(() => onRejected(this.reason));
-        }
-    }
-}</div>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">核心要点：</strong>状态机（pending/fulfilled/rejected）、then 方法链式调用、异步执行回调。</p><div class="code-block mono text-xs">class MyPromise {\\n    constructor(executor) {\\n        this.state = 'pending';\\n        this.value = undefined;\\n        this.reason = undefined;\\n        this.onFulfilledCallbacks = [];\\n        this.onRejectedCallbacks = [];\\n        \\n        const resolve = (value) => {\\n            if (this.state === 'pending') {\\n                this.state = 'fulfilled';\\n                this.value = value;\\n                this.onFulfilledCallbacks.forEach(fn => fn());\\n            }\\n        };\\n        \\n        const reject = (reason) => {\\n            if (this.state === 'pending') {\\n                this.state = 'rejected';\\n                this.reason = reason;\\n                this.onRejectedCallbacks.forEach(fn => fn());\\n            }\\n        };\\n        \\n        try { executor(resolve, reject); }\\n        catch (err) { reject(err); }\\n    }\\n    \\n    then(onFulfilled, onRejected) {\\n        if (this.state === 'fulfilled') onFulfilled(this.value);\\n        if (this.state === 'rejected') onRejected(this.reason);\\n        if (this.state === 'pending') {\\n            this.onFulfilledCallbacks.push(() => onFulfilled(this.value));\\n            this.onRejectedCallbacks.push(() => onRejected(this.reason));\\n        }\\n    }\\n}</div></div>`,
                 fill: {
-                    text: 'Promise 有三种状态：<span class="blank" data-answer="pending">_____</span>、<span class="blank" data-answer="fulfilled">_____</span>、<span class="blank" data-answer="rejected">_____</span>。状态一旦改变就不可再次修改。then 方法接收两个回调，分别对应<span class="blank" data-answer="成功">_____</span>和<span class="blank" data-answer="失败">_____</span>的情况。',
+                    text: [
+                        { type: 'text', content: 'Promise 有三种状态：' },
+                        { type: 'blank', answer: 'pending', hint: '初始状态' },
+                        { type: 'text', content: '、' },
+                        { type: 'blank', answer: 'fulfilled', hint: '成功' },
+                        { type: 'text', content: '、' },
+                        { type: 'blank', answer: 'rejected', hint: '失败' },
+                        { type: 'text', content: '。状态一旦改变就不可再次修改。then 方法接收两个回调，分别对应' },
+                        { type: 'blank', answer: '成功', hint: 'resolve' },
+                        { type: 'text', content: '和' },
+                        { type: 'blank', answer: '失败', hint: 'reject' },
+                        { type: 'text', content: '的情况。' }
+                    ],
                     hint: 'Promise 的核心是状态不可变 + 异步回调队列'
                 },
                 write: {
                     desc: '请手写 Promise.all，要求支持所有 Promise 完成或任一 reject。',
                     hint: '计数器 + 数组存储结果',
-                    answer: `Promise.myAll = function(promises) {
-    return new Promise((resolve, reject) => {
-        const results = [];
-        let completed = 0;
-        
-        promises.forEach((p, index) => {
-            Promise.resolve(p).then(value => {
-                results[index] = value;
-                completed++;
-                if (completed === promises.length) {
-                    resolve(results);
-                }
-            }).catch(reject);
-        });
-        
-        if (promises.length === 0) resolve([]);
-    });
-};`
+                    answer: `Promise.myAll = function(promises) {\\n    return new Promise((resolve, reject) => {\\n        const results = [];\\n        let completed = 0;\\n        \\n        promises.forEach((p, index) => {\\n            Promise.resolve(p).then(value => {\\n                results[index] = value;\\n                completed++;\\n                if (completed === promises.length) {\\n                    resolve(results);\\n                }\\n            }).catch(reject);\\n        });\\n        \\n        if (promises.length === 0) resolve([]);\\n    });\\n};`
                 },
                 choice: {
                     question: 'Promise.then() 返回的是？',
@@ -660,40 +576,31 @@ obj.arrow();   // undefined（继承全局/外层 this）</div>
                 },
                 hint: 'Promise 的核心是链式调用'
             },
-
-            // Browser
             {
                 id: 6,
                 category: 'browser',
                 question: '浏览器渲染页面的完整流程是什么？',
-                answer: `<div class="space-y-4">
-                    <p><strong>关键路径（Critical Rendering Path）：</strong></p>
-                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
-                        <li><strong>解析 HTML</strong> → DOM Tree</li>
-                        <li><strong>解析 CSS</strong> → CSSOM Tree</li>
-                        <li><strong>合并</strong> → Render Tree（只包含可见节点）</li>
-                        <li><strong>Layout（重排）</strong> → 计算几何信息</li>
-                        <li><strong>Paint（重绘）</strong> → 绘制像素</li>
-                        <li><strong>Composite（合成）</strong> → 分层合成最终页面</li>
-                    </ol>
-                    <p><strong>优化：</strong>CSS 放头部（避免 FOUC）、JS 放底部或 defer/async（避免阻塞解析）、减少重排（使用 transform/opacity）。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">关键路径（Critical Rendering Path）：</strong></p><ol class="list-decimal list-inside space-y-1 text-slate-300"><li><strong>解析 HTML</strong> → DOM Tree</li><li><strong>解析 CSS</strong> → CSSOM Tree</li><li><strong>合并</strong> → Render Tree（只包含可见节点）</li><li><strong>Layout（重排）</strong> → 计算几何信息</li><li><strong>Paint（重绘）</strong> → 绘制像素</li><li><strong>Composite（合成）</strong> → 分层合成最终页面</li></ol><p><strong class="text-blue-300">优化：</strong>CSS 放头部、JS 放底部或 defer/async、减少重排（使用 transform/opacity）。</p></div>`,
                 fill: {
-                    text: '浏览器渲染流程：HTML → <span class="blank" data-answer="DOM">_____</span> Tree，CSS → <span class="blank" data-answer="CSSOM">_____</span> Tree，合并为 <span class="blank" data-answer="Render">_____</span> Tree，然后经过 <span class="blank" data-answer="Layout">_____</span>（布局/重排）、<span class="blank" data-answer="Paint">_____</span>（绘制/重绘）、Composite（合成）。',
+                    text: [
+                        { type: 'text', content: '浏览器渲染流程：HTML → ' },
+                        { type: 'blank', answer: 'DOM', hint: '文档对象模型' },
+                        { type: 'text', content: ' Tree，CSS → ' },
+                        { type: 'blank', answer: 'CSSOM', hint: 'CSS 对象模型' },
+                        { type: 'text', content: ' Tree，合并为 ' },
+                        { type: 'blank', answer: 'Render', hint: '渲染树' },
+                        { type: 'text', content: ' Tree，然后经过 ' },
+                        { type: 'blank', answer: 'Layout', hint: '布局/重排' },
+                        { type: 'text', content: '（布局/重排）、' },
+                        { type: 'blank', answer: 'Paint', hint: '绘制/重绘' },
+                        { type: 'text', content: '、Composite（合成）。' }
+                    ],
                     hint: '记住 CRITICAL RENDERING PATH 的缩写'
                 },
                 write: {
                     desc: '如何优化首屏加载速度？请列举至少 5 种方法。',
                     hint: '从资源加载、渲染阻塞、缓存策略角度思考',
-                    answer: `// 首屏优化方案：
-1. 资源压缩与合并（Gzip、Tree Shaking）
-2. 路由懒加载 + 组件按需加载
-3. SSR / SSG（减少客户端渲染时间）
-4. 图片优化（WebP、懒加载、响应式图片）
-5. 关键 CSS 内联（Critical CSS）
-6. DNS 预解析 / 预连接 / 预加载
-7. Service Worker 缓存
-8. HTTP/2 Server Push（或 Early Hints）`
+                    answer: `// 首屏优化方案：\\n1. 资源压缩与合并（Gzip、Tree Shaking）\\n2. 路由懒加载 + 组件按需加载\\n3. SSR / SSG（减少客户端渲染时间）\\n4. 图片优化（WebP、懒加载、响应式图片）\\n5. 关键 CSS 内联（Critical CSS）\\n6. DNS 预解析 / 预连接 / 预加载\\n7. Service Worker 缓存\\n8. HTTP/2 Server Push（或 Early Hints）`
                 },
                 choice: {
                     question: '以下哪个属性变化只会触发 Composite，不会触发 Layout 和 Paint？',
@@ -707,34 +614,25 @@ obj.arrow();   // undefined（继承全局/外层 this）</div>
                 id: 7,
                 category: 'browser',
                 question: 'HTTP 缓存策略详解。',
-                answer: `<div class="space-y-4">
-                    <p><strong>强缓存（不会发请求到服务器）：</strong></p>
-                    <ul class="list-disc list-inside space-y-1 text-slate-300">
-                        <li>Expires（HTTP/1.0，绝对时间，受本地时间影响）</li>
-                        <li>Cache-Control: max-age=31536000（HTTP/1.1，相对时间，优先级更高）</li>
-                    </ul>
-                    <p><strong>协商缓存（发请求询问是否可用缓存）：</strong></p>
-                    <ul class="list-disc list-inside space-y-1 text-slate-300">
-                        <li>Last-Modified / If-Modified-Since（秒级精度，可能不准）</li>
-                        <li>ETag / If-None-Match（优先级更高，内容哈希）</li>
-                    </ul>
-                    <p><strong>缓存优先级：</strong>Service Worker > Memory Cache > Disk Cache > Push Cache > 网络请求。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">强缓存（不会发请求到服务器）：</strong></p><ul class="list-disc list-inside space-y-1 text-slate-300"><li>Expires（HTTP/1.0，绝对时间）</li><li>Cache-Control: max-age=31536000（HTTP/1.1，相对时间，优先级更高）</li></ul><p><strong class="text-blue-300">协商缓存（发请求询问是否可用缓存）：</strong></p><ul class="list-disc list-inside space-y-1 text-slate-300"><li>Last-Modified / If-Modified-Since（秒级精度）</li><li>ETag / If-None-Match（优先级更高，内容哈希）</li></ul></div>`,
                 fill: {
-                    text: 'HTTP 缓存分为<span class="blank" data-answer="强缓存">_____</span>和<span class="blank" data-answer="协商缓存">_____</span>。强缓存通过 <span class="blank" data-answer="Cache-Control">_____</span> 控制，协商缓存通过 <span class="blank" data-answer="ETag">_____</span> 和 Last-Modified 验证资源是否更新。',
+                    text: [
+                        { type: 'text', content: 'HTTP 缓存分为' },
+                        { type: 'blank', answer: '强缓存', hint: '不发请求' },
+                        { type: 'text', content: '和' },
+                        { type: 'blank', answer: '协商缓存', hint: '发请求确认' },
+                        { type: 'text', content: '。强缓存通过 ' },
+                        { type: 'blank', answer: 'Cache-Control', hint: 'max-age' },
+                        { type: 'text', content: ' 控制，协商缓存通过 ' },
+                        { type: 'blank', answer: 'ETag', hint: '内容哈希' },
+                        { type: 'text', content: ' 和 Last-Modified 验证资源是否更新。' }
+                    ],
                     hint: '200(from cache) vs 304 Not Modified'
                 },
                 write: {
                     desc: '请写出 Cache-Control 的常见指令及含义。',
                     hint: 'public/private/no-cache/no-store/max-age/s-maxage',
-                    answer: `Cache-Control 指令：
-- public: 任何缓存都可存储
-- private: 仅浏览器缓存
-- no-cache: 必须重新验证（走协商缓存）
-- no-store: 完全不缓存
-- max-age=秒: 强缓存时间
-- s-maxage=秒: CDN 缓存时间（代理服务器）
-- must-revalidate: 过期后必须验证`
+                    answer: `Cache-Control 指令：\\n- public: 任何缓存都可存储\\n- private: 仅浏览器缓存\\n- no-cache: 必须重新验证（走协商缓存）\\n- no-store: 完全不缓存\\n- max-age=秒: 强缓存时间\\n- s-maxage=秒: CDN 缓存时间\\n- must-revalidate: 过期后必须验证`
                 },
                 choice: {
                     question: '以下哪个响应头表示资源可以被任何缓存存储？',
@@ -744,43 +642,29 @@ obj.arrow();   // undefined（继承全局/外层 this）</div>
                 },
                 hint: '区分 private 和 public'
             },
-
-            // React
             {
                 id: 8,
                 category: 'react',
                 question: 'React Fiber 架构的核心设计思想是什么？',
-                answer: `<div class="space-y-4">
-                    <p><strong>为什么需要 Fiber：</strong>React 15 的递归渲染不可中断，大量 DOM 操作阻塞主线程导致卡顿。</p>
-                    <p><strong>Fiber 核心：</strong></p>
-                    <ul class="list-disc list-inside space-y-2 text-slate-300">
-                        <li><strong>链表结构：</strong>每个 Fiber 节点有 child、sibling、return 指针，支持断点恢复</li>
-                        <li><strong>双缓冲：</strong>current tree（当前屏）和 workInProgress tree（下一屏），渲染完直接切换指针</li>
-                        <li><strong>时间切片：</strong>利用 requestIdleCallback 或 MessageChannel，将渲染拆分成小任务</li>
-                        <li><strong>优先级调度：</strong>高优先级任务（用户输入）可打断低优先级任务（列表渲染）</li>
-                    </ul>
-                    <p><strong>工作循环：</strong>performUnitOfWork → beginWork（向下）→ completeWork（向上）→ commit（同步提交）。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">为什么需要 Fiber：</strong>React 15 的递归渲染不可中断，大量 DOM 操作阻塞主线程导致卡顿。</p><p><strong class="text-blue-300">Fiber 核心：</strong></p><ul class="list-disc list-inside space-y-2 text-slate-300"><li><strong>链表结构：</strong>每个 Fiber 节点有 child、sibling、return 指针，支持断点恢复</li><li><strong>双缓冲：</strong>current tree 和 workInProgress tree</li><li><strong>时间切片：</strong>利用 requestIdleCallback 或 MessageChannel</li><li><strong>优先级调度：</strong>高优先级任务可打断低优先级任务</li></ul></div>`,
                 fill: {
-                    text: 'Fiber 架构使用<span class="blank" data-answer="链表">_____</span>结构替代递归，支持<span class="blank" data-answer="中断">_____</span>和恢复渲染。采用<span class="blank" data-answer="双缓冲">_____</span>机制（current 和 workInProgress），通过<span class="blank" data-answer="时间切片">_____</span>将渲染任务拆分，避免阻塞主线程。',
+                    text: [
+                        { type: 'text', content: 'Fiber 架构使用' },
+                        { type: 'blank', answer: '链表', hint: '不是递归' },
+                        { type: 'text', content: '结构替代递归，支持' },
+                        { type: 'blank', answer: '中断', hint: '可恢复' },
+                        { type: 'text', content: '和恢复渲染。采用' },
+                        { type: 'blank', answer: '双缓冲', hint: '两个树' },
+                        { type: 'text', content: '机制（current 和 workInProgress），通过' },
+                        { type: 'blank', answer: '时间切片', hint: 'Time Slicing' },
+                        { type: 'text', content: '将渲染任务拆分，避免阻塞主线程。' }
+                    ],
                     hint: '想想为什么链表比递归更适合中断'
                 },
                 write: {
                     desc: 'React 18 的 Automatic Batching 是什么？与之前版本有何不同？',
                     hint: 'setTimeout/Promise 中的 setState',
-                    answer: `// React 18 之前的 Batching：
-// 只在 React 事件处理函数中自动批处理
-// setTimeout/Promise 中的 setState 会同步触发多次渲染
-
-// React 18 的 Automatic Batching：
-// 所有场景（包括 setTimeout、Promise、原生事件）都会自动批处理
-// 减少不必要的重渲染
-
-setTimeout(() => {
-    setCount(c => c + 1); // 不会立即渲染
-    setFlag(f => !f);     // 不会立即渲染
-    // 退出事件后统一批处理渲染一次
-}, 1000);`
+                    answer: `// React 18 之前的 Batching：\\n// 只在 React 事件处理函数中自动批处理\\n// setTimeout/Promise 中的 setState 会同步触发多次渲染\\n\\n// React 18 的 Automatic Batching：\\n// 所有场景（包括 setTimeout、Promise、原生事件）都会自动批处理\\n// 减少不必要的重渲染\\n\\nsetTimeout(() => {\\n    setCount(c => c + 1); // 不会立即渲染\\n    setFlag(f => !f);     // 不会立即渲染\\n    // 退出事件后统一批处理渲染一次\\n}, 1000);`
                 },
                 choice: {
                     question: 'Fiber 节点中用于指向父节点的属性是？',
@@ -794,56 +678,26 @@ setTimeout(() => {
                 id: 9,
                 category: 'react',
                 question: 'Hooks 为什么不能放在 if 或循环中？',
-                answer: `<div class="space-y-4">
-                    <p><strong>原因：</strong>React 通过<strong>调用顺序</strong>来区分不同的 Hook，而不是通过名称。</p>
-                    <div class="code-block mono">// React 内部用数组存储 Hook 状态
-const hooks = [];
-let idx = 0;
-
-function useState(initial) {
-    const state = hooks[idx] || initial;
-    hooks[idx] = state;
-    const _idx = idx;
-    idx++;
-    return [state, (newVal) => hooks[_idx] = newVal];
-}</div>
-                    <p><strong>条件渲染会破坏顺序对应关系：</strong></p>
-                    <div class="code-block mono">if (condition) {
-    const [state, setState] = useState(); // 条件为 false 时跳过，索引错位！
-}</div>
-                    <p><strong>解决方案：</strong>将条件判断放在 Hook 内部，或使用自定义 Hook 封装。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">原因：</strong>React 通过<strong>调用顺序</strong>来区分不同的 Hook，而不是通过名称。</p><div class="code-block mono text-xs">// React 内部用数组存储 Hook 状态\\nconst hooks = [];\\nlet idx = 0;\\n\\nfunction useState(initial) {\\n    const state = hooks[idx] || initial;\\n    hooks[idx] = state;\\n    const _idx = idx;\\n    idx++;\\n    return [state, (newVal) => hooks[_idx] = newVal];\\n}</div><p><strong class="text-blue-300">条件渲染会破坏顺序对应关系：</strong></p><div class="code-block mono text-xs">if (condition) {\\n    const [state, setState] = useState(); // 条件为 false 时跳过，索引错位！\\n}</div></div>`,
                 fill: {
-                    text: 'Hooks 依赖<span class="blank" data-answer="调用顺序">_____</span>来匹配状态。如果在 if 或循环中使用，会导致 Hook 的<span class="blank" data-answer="索引">_____</span>错位，React 无法正确对应组件状态。React 内部使用<span class="blank" data-answer="数组">_____</span>来存储所有 Hook 的状态。',
+                    text: [
+                        { type: 'text', content: 'Hooks 依赖' },
+                        { type: 'blank', answer: '调用顺序', hint: '不是名称' },
+                        { type: 'text', content: '来匹配状态。如果在 if 或循环中使用，会导致 Hook 的' },
+                        { type: 'blank', answer: '索引', hint: '数组下标' },
+                        { type: 'text', content: '错位，React 无法正确对应组件状态。React 内部使用' },
+                        { type: 'blank', answer: '数组', hint: '按顺序存储' },
+                        { type: 'text', content: '来存储所有 Hook 的状态。' }
+                    ],
                     hint: 'React 怎么知道这是第几个 useState？'
                 },
                 write: {
                     desc: '请手写一个简化版的 useState。',
                     hint: '数组存储 + 闭包 + 触发重新渲染',
-                    answer: `let hooks = [];
-let idx = 0;
-
-function useState(initialValue) {
-    const state = hooks[idx] !== undefined ? hooks[idx] : initialValue;
-    hooks[idx] = state;
-    const _idx = idx;
-    idx++;
-    
-    function setState(newValue) {
-        hooks[_idx] = newValue;
-        render(); // 触发重新渲染
-    }
-    
-    return [state, setState];
-}
-
-function MyComponent() {
-    const [count, setCount] = useState(0);
-    // ...
-}`
+                    answer: `let hooks = [];\\nlet idx = 0;\\n\\nfunction useState(initialValue) {\\n    const state = hooks[idx] !== undefined ? hooks[idx] : initialValue;\\n    hooks[idx] = state;\\n    const _idx = idx;\\n    idx++;\\n    \\n    function setState(newValue) {\\n        hooks[_idx] = newValue;\\n        render(); // 触发重新渲染\\n    }\\n    \\n    return [state, setState];\\n}\\n\\nfunction MyComponent() {\\n    const [count, setCount] = useState(0);\\n    // ...\\n}`
                 },
                 choice: {
-                    question: '以下代码会有什么问题？\nfunction Foo() {\n  if (condition) {\n    const [state] = useState(0);\n  }\n  const [other] = useState(1);\n}',
+                    question: '以下代码会有什么问题？\\nfunction Foo() {\\n  if (condition) {\\n    const [state] = useState(0);\\n  }\\n  const [other] = useState(1);\\n}',
                     options: [
                         '语法错误',
                         'Hook 调用顺序不稳定，导致状态错位',
@@ -859,34 +713,27 @@ function MyComponent() {
                 id: 10,
                 category: 'react',
                 question: 'React 的 Diff 算法策略是什么？',
-                answer: `<div class="space-y-4">
-                    <p><strong>三大策略（O(n) 复杂度）：</strong></p>
-                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
-                        <li><strong>Tree Diff：</strong>只比较同层级节点，跨层级直接销毁重建</li>
-                        <li><strong>Component Diff：</strong>同类型组件继续 Diff，不同类型直接替换</li>
-                        <li><strong>Element Diff：</strong>通过 key 优化列表比较（移动 > 删除重建）</li>
-                    </ol>
-                    <p><strong>key 的作用：</strong>帮助 React 识别哪些元素改变了（增删改），减少不必要的 DOM 操作。不使用 key 或索引作为 key 在列表重排时会导致性能问题和状态错乱。</p>
-                    <p><strong>Vue2 差异：</strong>Vue2 使用双端 Diff（头尾指针），理论上更优，但 React 的 Fiber 架构使单次 Diff 可中断。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">三大策略（O(n) 复杂度）：</strong></p><ol class="list-decimal list-inside space-y-2 text-slate-300"><li><strong>Tree Diff：</strong>只比较同层级节点，跨层级直接销毁重建</li><li><strong>Component Diff：</strong>同类型组件继续 Diff，不同类型直接替换</li><li><strong>Element Diff：</strong>通过 key 优化列表比较（移动 > 删除重建）</li></ol><p><strong class="text-blue-300">key 的作用：</strong>帮助 React 识别哪些元素改变了，减少不必要的 DOM 操作。</p></div>`,
                 fill: {
-                    text: 'React Diff 三大策略：<span class="blank" data-answer="Tree">_____</span> Diff（同层级比较）、<span class="blank" data-answer="Component">_____</span> Diff（同类型继续比较）、<span class="blank" data-answer="Element">_____</span> Diff（通过 <span class="blank" data-answer="key">_____</span> 优化列表）。不使用 key 会导致列表<span class="blank" data-answer="重排">_____</span>时性能下降和状态错乱。',
+                    text: [
+                        { type: 'text', content: 'React Diff 三大策略：' },
+                        { type: 'blank', answer: 'Tree', hint: '同层级' },
+                        { type: 'text', content: ' Diff（同层级比较）、' },
+                        { type: 'blank', answer: 'Component', hint: '组件类型' },
+                        { type: 'text', content: ' Diff（同类型继续比较）、' },
+                        { type: 'blank', answer: 'Element', hint: '元素级别' },
+                        { type: 'text', content: ' Diff（通过 ' },
+                        { type: 'blank', answer: 'key', hint: '唯一标识' },
+                        { type: 'text', content: ' 优化列表）。不使用 key 会导致列表' },
+                        { type: 'blank', answer: '重排', hint: '顺序变化' },
+                        { type: 'text', content: '时性能下降和状态错乱。' }
+                    ],
                     hint: '为什么列表渲染必须加 key？'
                 },
                 write: {
                     desc: '为什么不建议使用数组索引作为 key？什么情况下可以？',
                     hint: '重排场景 vs 静态列表',
-                    answer: `// 不建议使用索引作为 key 的情况：
-// 1. 列表会重排（拖拽排序、筛选）
-// 2. 列表项有受控组件或内部状态
-// 因为索引变化会导致 React 误判为不同组件，状态错位
-
-// 可以使用索引作为 key 的情况：
-// 1. 纯展示列表，无内部状态
-// 2. 列表不会增删改，只会整体替换
-// 3. 列表项是简单的文本/图片
-
-// 最佳实践：使用唯一业务 ID（如数据库主键）`
+                    answer: `// 不建议使用索引作为 key 的情况：\\n// 1. 列表会重排（拖拽排序、筛选）\\n// 2. 列表项有受控组件或内部状态\\n// 因为索引变化会导致 React 误判为不同组件，状态错位\\n\\n// 可以使用索引作为 key 的情况：\\n// 1. 纯展示列表，无内部状态\\n// 2. 列表不会增删改，只会整体替换\\n// 3. 列表项是简单的文本/图片\\n\\n// 最佳实践：使用唯一业务 ID（如数据库主键）`
                 },
                 choice: {
                     question: 'React Diff 算法的时间复杂度是？',
@@ -896,64 +743,29 @@ function MyComponent() {
                 },
                 hint: '经典面试题：从 O(n³) 优化到 O(n)'
             },
-
-            // Vue
             {
                 id: 11,
                 category: 'vue',
                 question: 'Vue2 与 Vue3 响应式原理的区别？',
-                answer: `<div class="space-y-4">
-                    <p><strong>Vue2：</strong>Object.defineProperty</p>
-                    <ul class="list-disc list-inside space-y-1 text-slate-300">
-                        <li>只能劫持已存在的属性，新增属性需 Vue.set</li>
-                        <li>无法监听数组索引和 length 变化（需重写 7 个方法）</li>
-                        <li>嵌套对象需递归遍历，性能开销大</li>
-                    </ul>
-                    <p><strong>Vue3：</strong>Proxy</p>
-                    <ul class="list-disc list-inside space-y-1 text-slate-300">
-                        <li>可监听新增/删除属性</li>
-                        <li>原生支持数组索引和 length</li>
-                        <li>懒代理（访问时才递归），初始化性能更好</li>
-                        <li>但 Proxy 无法 polyfill，不兼容 IE11</li>
-                    </ul>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">Vue2：</strong>Object.defineProperty</p><ul class="list-disc list-inside space-y-1 text-slate-300"><li>只能劫持已存在的属性，新增属性需 Vue.set</li><li>无法监听数组索引和 length 变化</li><li>嵌套对象需递归遍历，性能开销大</li></ul><p><strong class="text-blue-300">Vue3：</strong>Proxy</p><ul class="list-disc list-inside space-y-1 text-slate-300"><li>可监听新增/删除属性</li><li>原生支持数组索引和 length</li><li>懒代理（访问时才递归），初始化性能更好</li></ul></div>`,
                 fill: {
-                    text: 'Vue2 使用<span class="blank" data-answer="Object.defineProperty">_____</span>实现响应式，无法监听对象<span class="blank" data-answer="新增">_____</span>属性和数组<span class="blank" data-answer="索引">_____</span>变化。Vue3 改用<span class="blank" data-answer="Proxy">_____</span>，支持懒代理，性能更优，但兼容性要求更高。',
+                    text: [
+                        { type: 'text', content: 'Vue2 使用' },
+                        { type: 'blank', answer: 'Object.defineProperty', hint: '属性描述符' },
+                        { type: 'text', content: '实现响应式，无法监听对象' },
+                        { type: 'blank', answer: '新增', hint: '动态添加' },
+                        { type: 'text', content: '属性和数组' },
+                        { type: 'blank', answer: '索引', hint: 'arr[0]' },
+                        { type: 'text', content: '变化。Vue3 改用' },
+                        { type: 'blank', answer: 'Proxy', hint: '代理对象' },
+                        { type: 'text', content: '，支持懒代理，性能更优。' }
+                    ],
                     hint: 'Vue2 数组为什么能响应式？因为重写了方法'
                 },
                 write: {
                     desc: '请手写一个简化版的 Vue3 reactive 实现。',
                     hint: 'Proxy + Reflect + track/trigger',
-                    answer: `let activeEffect = null;
-
-function reactive(target) {
-    return new Proxy(target, {
-        get(obj, key) {
-            track(obj, key);
-            return obj[key];
-        },
-        set(obj, key, value) {
-            obj[key] = value;
-            trigger(obj, key);
-            return true;
-        }
-    });
-}
-
-function track(target, key) {
-    if (!activeEffect) return;
-    // 将 activeEffect 收集到 target[key] 的依赖集合中
-}
-
-function trigger(target, key) {
-    // 执行 target[key] 的所有依赖
-}
-
-function effect(fn) {
-    activeEffect = fn;
-    fn();
-    activeEffect = null;
-}`
+                    answer: `let activeEffect = null;\\n\\nfunction reactive(target) {\\n    return new Proxy(target, {\\n        get(obj, key) {\\n            track(obj, key);\\n            return obj[key];\\n        },\\n        set(obj, key, value) {\\n            obj[key] = value;\\n            trigger(obj, key);\\n            return true;\\n        }\\n    });\\n}\\n\\nfunction track(target, key) {\\n    if (!activeEffect) return;\\n    // 将 activeEffect 收集到 target[key] 的依赖集合中\\n}\\n\\nfunction trigger(target, key) {\\n    // 执行 target[key] 的所有依赖\\n}\\n\\nfunction effect(fn) {\\n    activeEffect = fn;\\n    fn();\\n    activeEffect = null;\\n}`
                 },
                 choice: {
                     question: 'Vue3 的 Proxy 相比 Vue2 的 defineProperty，以下哪个说法错误？',
@@ -968,42 +780,29 @@ function effect(fn) {
                 },
                 hint: 'Proxy 的兼容性'
             },
-
-            // Engineering
             {
                 id: 12,
                 category: 'engineering',
                 question: 'Webpack 的 Loader 和 Plugin 有什么区别？',
-                answer: `<div class="space-y-4">
-                    <p><strong>Loader：</strong>文件转换器，处理模块的<strong>加载和转换</strong>（如 babel-loader、css-loader）。</p>
-                    <ul class="list-disc list-inside space-y-1 text-slate-300">
-                        <li>执行时机：模块加载时</li>
-                        <li>配置方式：module.rules 数组，从右到左/下到上执行</li>
-                        <li>本质：函数，接收源文件内容，返回转换后的内容</li>
-                    </ul>
-                    <p><strong>Plugin：</strong>扩展 Webpack 功能，处理<strong>构建生命周期</strong>（如 HtmlWebpackPlugin、CleanWebpackPlugin）。</p>
-                    <ul class="list-disc list-inside space-y-1 text-slate-300">
-                        <li>执行时机：贯穿整个编译周期（compile → make → seal → emit）</li>
-                        <li>配置方式：plugins 数组</li>
-                        <li>本质：类，通过 apply 方法注册钩子</li>
-                    </ul>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">Loader：</strong>文件转换器，处理模块的<strong>加载和转换</strong>。</p><ul class="list-disc list-inside space-y-1 text-slate-300"><li>执行时机：模块加载时</li><li>配置方式：module.rules 数组，从右到左/下到上执行</li><li>本质：函数，接收源文件内容，返回转换后的内容</li></ul><p><strong class="text-blue-300">Plugin：</strong>扩展 Webpack 功能，处理<strong>构建生命周期</strong>。</p><ul class="list-disc list-inside space-y-1 text-slate-300"><li>执行时机：贯穿整个编译周期</li><li>配置方式：plugins 数组</li><li>本质：类，通过 apply 方法注册钩子</li></ul></div>`,
                 fill: {
-                    text: 'Loader 是<span class="blank" data-answer="文件转换器">_____</span>，处理模块的加载和转换；Plugin 是<span class="blank" data-answer="扩展插件">_____</span>，处理构建生命周期。Loader 在<span class="blank" data-answer="模块加载">_____</span>时执行，Plugin 通过<span class="blank" data-answer="钩子">_____</span>机制介入编译全过程。',
+                    text: [
+                        { type: 'text', content: 'Loader 是' },
+                        { type: 'blank', answer: '文件转换器', hint: '处理文件内容' },
+                        { type: 'text', content: '，处理模块的加载和转换；Plugin 是' },
+                        { type: 'blank', answer: '扩展插件', hint: '增强功能' },
+                        { type: 'text', content: '，处理构建生命周期。Loader 在' },
+                        { type: 'blank', answer: '模块加载', hint: '编译时' },
+                        { type: 'text', content: '时执行，Plugin 通过' },
+                        { type: 'blank', answer: '钩子', hint: 'Hook' },
+                        { type: 'text', content: '机制介入编译全过程。' }
+                    ],
                     hint: 'Loader 处理"文件内容"，Plugin 处理"构建流程"'
                 },
                 write: {
                     desc: 'Vite 为什么比 Webpack 快？其预构建（pre-bundle）的作用是什么？',
                     hint: 'ESM vs Bundle、esbuild、依赖缓存',
-                    answer: `// Vite 快的原因：
-1. 开发环境基于原生 ESM，无需打包，按需编译
-2. 使用 esbuild（Go 编写）预构建依赖，比 JS 快 10-100 倍
-3. 利用浏览器缓存，模块级 HMR
-
-// 预构建（pre-bundle）的作用：
-1. 将 CommonJS 依赖转换为 ESM
-2. 减少模块数量（如 lodash 数百个模块合并为几个）
-3. 缓存到 node_modules/.vite，加速后续启动`
+                    answer: `// Vite 快的原因：\\n1. 开发环境基于原生 ESM，无需打包，按需编译\\n2. 使用 esbuild（Go 编写）预构建依赖，比 JS 快 10-100 倍\\n3. 利用浏览器缓存，模块级 HMR\\n\\n// 预构建（pre-bundle）的作用：\\n1. 将 CommonJS 依赖转换为 ESM\\n2. 减少模块数量（如 lodash 数百个模块合并为几个）\\n3. 缓存到 node_modules/.vite，加速后续启动`
                 },
                 choice: {
                     question: '以下哪个是 Plugin 的典型应用场景？',
@@ -1018,59 +817,27 @@ function effect(fn) {
                 },
                 hint: 'Plugin 操作的是"构建流程"而非"文件内容"'
             },
-
-            // Handwrite
             {
                 id: 13,
                 category: 'handwrite',
                 question: '手写深拷贝（处理循环引用）。',
-                answer: `<div class="space-y-4">
-                    <div class="code-block mono">function deepClone(obj, map = new WeakMap()) {
-    if (obj === null || typeof obj !== 'object') return obj;
-    if (obj instanceof Date) return new Date(obj);
-    if (obj instanceof RegExp) return new RegExp(obj);
-    if (obj instanceof Map) return new Map(Array.from(obj, ([k, v]) => [k, deepClone(v, map)]));
-    if (obj instanceof Set) return new Set(Array.from(obj, v => deepClone(v, map)));
-    
-    if (map.has(obj)) return map.get(obj); // 处理循环引用
-    
-    const clone = Array.isArray(obj) ? [] : {};
-    map.set(obj, clone);
-    
-    for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            clone[key] = deepClone(obj[key], map);
-        }
-    }
-    
-    return clone;
-}</div>
-                    <p><strong>关键点：</strong>WeakMap 存储已拷贝对象（避免循环引用导致栈溢出）、处理特殊对象（Date/RegExp/Map/Set）、递归拷贝。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><div class="code-block mono text-xs">function deepClone(obj, map = new WeakMap()) {\\n    if (obj === null || typeof obj !== 'object') return obj;\\n    if (obj instanceof Date) return new Date(obj);\\n    if (obj instanceof RegExp) return new RegExp(obj);\\n    if (obj instanceof Map) return new Map(Array.from(obj, ([k, v]) => [k, deepClone(v, map)]));\\n    if (obj instanceof Set) return new Set(Array.from(obj, v => deepClone(v, map)));\\n    \\n    if (map.has(obj)) return map.get(obj); // 处理循环引用\\n    \\n    const clone = Array.isArray(obj) ? [] : {};\\n    map.set(obj, clone);\\n    \\n    for (let key in obj) {\\n        if (obj.hasOwnProperty(key)) {\\n            clone[key] = deepClone(obj[key], map);\\n        }\\n    }\\n    \\n    return clone;\\n}</div><p><strong class="text-blue-300">关键点：</strong>WeakMap 存储已拷贝对象、处理特殊对象、递归拷贝。</p></div>`,
                 fill: {
-                    text: '深拷贝处理循环引用需要使用<span class="blank" data-answer="WeakMap">_____</span>存储已拷贝的对象。遇到已存在的对象时直接<span class="blank" data-answer="返回引用">_____</span>，避免无限递归。还需特殊处理 <span class="blank" data-answer="Date">_____</span>、RegExp、Map、Set 等内置对象。',
+                    text: [
+                        { type: 'text', content: '深拷贝处理循环引用需要使用' },
+                        { type: 'blank', answer: 'WeakMap', hint: '弱引用Map' },
+                        { type: 'text', content: '存储已拷贝的对象。遇到已存在的对象时直接' },
+                        { type: 'blank', answer: '返回引用', hint: '避免重复拷贝' },
+                        { type: 'text', content: '，避免无限递归。还需特殊处理 ' },
+                        { type: 'blank', answer: 'Date', hint: '时间对象' },
+                        { type: 'text', content: '、RegExp、Map、Set 等内置对象。' }
+                    ],
                     hint: '为什么用 WeakMap 不用 Map？'
                 },
                 write: {
                     desc: '请手写一个支持循环引用的深拷贝函数。',
                     hint: 'WeakMap + 递归 + 特殊对象处理',
-                    answer: `function deepClone(obj, map = new WeakMap()) {
-    if (obj === null || typeof obj !== 'object') return obj;
-    if (obj instanceof Date) return new Date(obj);
-    if (obj instanceof RegExp) return new RegExp(obj);
-    
-    if (map.has(obj)) return map.get(obj);
-    
-    const clone = Array.isArray(obj) ? [] : {};
-    map.set(obj, clone);
-    
-    for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            clone[key] = deepClone(obj[key], map);
-        }
-    }
-    return clone;
-}`
+                    answer: `function deepClone(obj, map = new WeakMap()) {\\n    if (obj === null || typeof obj !== 'object') return obj;\\n    if (obj instanceof Date) return new Date(obj);\\n    if (obj instanceof RegExp) return new RegExp(obj);\\n    \\n    if (map.has(obj)) return map.get(obj);\\n    \\n    const clone = Array.isArray(obj) ? [] : {};\\n    map.set(obj, clone);\\n    \\n    for (let key in obj) {\\n        if (obj.hasOwnProperty(key)) {\\n            clone[key] = deepClone(obj[key], map);\\n        }\\n    }\\n    return clone;\\n}`
                 },
                 choice: {
                     question: '深拷贝中为什么使用 WeakMap 而不是 Map 来存储已拷贝对象？',
@@ -1089,63 +856,25 @@ function effect(fn) {
                 id: 14,
                 category: 'handwrite',
                 question: '手写 LRU 缓存。',
-                answer: `<div class="space-y-4">
-                    <div class="code-block mono">class LRUCache {
-    constructor(capacity) {
-        this.capacity = capacity;
-        this.cache = new Map(); // Map 保持插入顺序
-    }
-    
-    get(key) {
-        if (!this.cache.has(key)) return -1;
-        const value = this.cache.get(key);
-        this.cache.delete(key);
-        this.cache.set(key, value); // 移到末尾（最新）
-        return value;
-    }
-    
-    put(key, value) {
-        if (this.cache.has(key)) {
-            this.cache.delete(key);
-        } else if (this.cache.size >= this.capacity) {
-            const firstKey = this.cache.keys().next().value;
-            this.cache.delete(firstKey); // 删除最久未使用
-        }
-        this.cache.set(key, value);
-    }
-}</div>
-                    <p><strong>核心：</strong>利用 Map 的迭代顺序特性，get 时先 delete 再 set 将其移到末尾（最新），超出容量时删除第一个（最旧）。</p>
-                </div>`,
+                answer: `<div class="space-y-3 text-sm"><div class="code-block mono text-xs">class LRUCache {\\n    constructor(capacity) {\\n        this.capacity = capacity;\\n        this.cache = new Map(); // Map 保持插入顺序\\n    }\\n    \\n    get(key) {\\n        if (!this.cache.has(key)) return -1;\\n        const value = this.cache.get(key);\\n        this.cache.delete(key);\\n        this.cache.set(key, value); // 移到末尾（最新）\\n        return value;\\n    }\\n    \\n    put(key, value) {\\n        if (this.cache.has(key)) {\\n            this.cache.delete(key);\\n        } else if (this.cache.size >= this.capacity) {\\n            const firstKey = this.cache.keys().next().value;\\n            this.cache.delete(firstKey); // 删除最久未使用\\n        }\\n        this.cache.set(key, value);\\n    }\\n}</div><p><strong class="text-blue-300">核心：</strong>利用 Map 的迭代顺序特性，get 时先 delete 再 set 将其移到末尾（最新），超出容量时删除第一个（最旧）。</p></div>`,
                 fill: {
-                    text: 'LRU 缓存使用<span class="blank" data-answer="Map">_____</span>实现，利用其保持<span class="blank" data-answer="插入顺序">_____</span>的特性。get 操作时，先删除再重新插入，将其移到<span class="blank" data-answer="末尾">_____</span>（最新）。超出容量时，删除<span class="blank" data-answer="第一个">_____</span>元素（最久未使用）。',
+                    text: [
+                        { type: 'text', content: 'LRU 缓存使用' },
+                        { type: 'blank', answer: 'Map', hint: '有序字典' },
+                        { type: 'text', content: '实现，利用其保持' },
+                        { type: 'blank', answer: '插入顺序', hint: '迭代顺序' },
+                        { type: 'text', content: '的特性。get 操作时，先删除再重新插入，将其移到' },
+                        { type: 'blank', answer: '末尾', hint: '最新位置' },
+                        { type: 'text', content: '（最新）。超出容量时，删除' },
+                        { type: 'blank', answer: '第一个', hint: '最旧的' },
+                        { type: 'text', content: '元素（最久未使用）。' }
+                    ],
                     hint: 'Map 的 keys() 顺序特性'
                 },
                 write: {
                     desc: '请使用 Map 手写一个 LRU 缓存，支持 get 和 put 操作。',
                     hint: 'Map 的顺序特性 + O(1) 操作',
-                    answer: `class LRUCache {
-    constructor(capacity) {
-        this.capacity = capacity;
-        this.cache = new Map();
-    }
-    
-    get(key) {
-        if (!this.cache.has(key)) return -1;
-        const val = this.cache.get(key);
-        this.cache.delete(key);
-        this.cache.set(key, val);
-        return val;
-    }
-    
-    put(key, value) {
-        if (this.cache.has(key)) this.cache.delete(key);
-        else if (this.cache.size >= this.capacity) {
-            const oldest = this.cache.keys().next().value;
-            this.cache.delete(oldest);
-        }
-        this.cache.set(key, value);
-    }
-}`
+                    answer: `class LRUCache {\\n    constructor(capacity) {\\n        this.capacity = capacity;\\n        this.cache = new Map();\\n    }\\n    \\n    get(key) {\\n        if (!this.cache.has(key)) return -1;\\n        const val = this.cache.get(key);\\n        this.cache.delete(key);\\n        this.cache.set(key, val);\\n        return val;\\n    }\\n    \\n    put(key, value) {\\n        if (this.cache.has(key)) this.cache.delete(key);\\n        else if (this.cache.size >= this.capacity) {\\n            const oldest = this.cache.keys().next().value;\\n            this.cache.delete(oldest);\\n        }\\n        this.cache.set(key, value);\\n    }\\n}`
                 },
                 choice: {
                     question: 'LRU 缓存中，Map 相比普通对象的优势是？',
@@ -1161,18 +890,121 @@ function effect(fn) {
                 hint: 'Map vs Object 的顺序特性'
             }
         ];
+'''
 
+with open('/mnt/agents/output/index_part2.html', 'w', encoding='utf-8') as f:
+    f.write(html_part2)
+
+print("Part 2 saved successfully")
+print(f"Length: {len(html_part2)} characters")
+
+# Continue with the core logic functions
+html_part3 = '''
         // ==================== State ====================
         let currentMode = 'flip';
         let currentCategory = 'all';
         let currentIndex = 0;
         let streak = 0;
+        let ttsEnabled = false;
+        let currentSpeech = null;
         let masteredCards = new Set(JSON.parse(localStorage.getItem('masteredCards') || '[]'));
         let cardHistory = JSON.parse(localStorage.getItem('cardHistory') || '{}');
         
         const filteredCards = () => currentCategory === 'all' 
             ? cards 
             : cards.filter(c => c.category === currentCategory);
+
+        // ==================== TTS (Text to Speech) ====================
+        function toggleTTS() {
+            ttsEnabled = !ttsEnabled;
+            const btn = document.getElementById('ttsToggle');
+            if (ttsEnabled) {
+                btn.classList.add('bg-blue-100', 'text-blue-600');
+                btn.classList.remove('text-slate-600');
+                // Test speech
+                speakText('朗读功能已开启');
+            } else {
+                btn.classList.remove('bg-blue-100', 'text-blue-600');
+                btn.classList.add('text-slate-600');
+                stopSpeech();
+            }
+        }
+
+        function speakText(text) {
+            if (!ttsEnabled || !text) return;
+            
+            // Stop any ongoing speech
+            stopSpeech();
+            
+            // Clean text for speech (remove HTML tags, code blocks)
+            const cleanText = text
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\\n/g, ' ')
+                .replace(/\\s+/g, ' ')
+                .replace(/[{}();]/g, ' ')
+                .trim();
+            
+            if (!cleanText) return;
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            utterance.onstart = () => {
+                document.querySelectorAll('.tts-btn').forEach(btn => {
+                    if (btn._speechText === cleanText) btn.classList.add('speaking');
+                });
+            };
+            
+            utterance.onend = () => {
+                document.querySelectorAll('.tts-btn').forEach(btn => btn.classList.remove('speaking'));
+                currentSpeech = null;
+            };
+            
+            utterance.onerror = () => {
+                document.querySelectorAll('.tts-btn').forEach(btn => btn.classList.remove('speaking'));
+                currentSpeech = null;
+            };
+            
+            currentSpeech = utterance;
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeech() {
+            if (currentSpeech) {
+                speechSynthesis.cancel();
+                currentSpeech = null;
+            }
+            document.querySelectorAll('.tts-btn').forEach(btn => btn.classList.remove('speaking'));
+        }
+
+        function speakAnswer() {
+            const card = filteredCards()[currentIndex % filteredCards().length];
+            if (card && card.answer) {
+                // Extract text from answer HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = card.answer;
+                const text = tempDiv.textContent || tempDiv.innerText || '';
+                speakText(text);
+            }
+        }
+
+        function speakFillQuestion() {
+            const card = filteredCards()[currentIndex % filteredCards().length];
+            if (!card || !card.fill) return;
+            
+            let text = '';
+            card.fill.text.forEach(item => {
+                if (item.type === 'text') {
+                    text += item.content;
+                } else if (item.type === 'blank') {
+                    text += '【填空】';
+                }
+            });
+            speakText(text);
+        }
 
         // ==================== Initialization ====================
         function init() {
@@ -1220,11 +1052,11 @@ function effect(fn) {
         function renderMobileNav() {
             const nav = document.getElementById('mobileCategoryNav');
             nav.innerHTML = `
-                <button onclick="setCategory('all')" class="shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap ${currentCategory === 'all' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}">全部</button>
+                <button onclick="setCategory('all')" class="shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap ${currentCategory === 'all' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}">全部</button>
             `;
             categories.forEach(cat => {
                 nav.innerHTML += `
-                    <button onclick="setCategory('${cat.id}')" class="shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap ${currentCategory === cat.id ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}">${cat.icon} ${cat.name}</button>
+                    <button onclick="setCategory('${cat.id}')" class="shrink-0 px-3 py-1.5 rounded-full text-xs whitespace-nowrap ${currentCategory === cat.id ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}">${cat.icon} ${cat.name}</button>
                 `;
             });
         }
@@ -1247,11 +1079,15 @@ function effect(fn) {
             
             const progress = totalAll > 0 ? (masteredAll / totalAll) * 100 : 0;
             document.getElementById('totalProgress').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${masteredAll}/${totalAll}`;
+            document.getElementById('progressPercent').textContent = `${Math.round(progress)}%`;
         }
 
         // ==================== Mode Switching ====================
         function setMode(mode) {
             currentMode = mode;
+            
+            // Update desktop buttons
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 if (btn.dataset.mode === mode) {
                     btn.classList.add('bg-blue-50', 'text-blue-700', 'font-medium');
@@ -1259,6 +1095,17 @@ function effect(fn) {
                 } else {
                     btn.classList.remove('bg-blue-50', 'text-blue-700', 'font-medium');
                     btn.classList.add('hover:bg-slate-50', 'text-slate-600');
+                }
+            });
+            
+            // Update mobile buttons
+            document.querySelectorAll('.mode-btn-mobile').forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('bg-blue-500', 'text-white');
+                    btn.classList.remove('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-600');
                 }
             });
             
@@ -1277,7 +1124,7 @@ function effect(fn) {
             loadCard();
         }
 
-        // ==================== Flip Mode ====================
+        // ==================== Card Loading ====================
         function loadCard() {
             const filtered = filteredCards();
             if (filtered.length === 0) {
@@ -1298,18 +1145,47 @@ function effect(fn) {
             }
         }
 
+        function showEmptyState() {
+            document.querySelectorAll('.mode-container').forEach(c => c.classList.add('hidden'));
+            // Show a message in the main area
+            const main = document.querySelector('main');
+            let empty = document.getElementById('emptyState');
+            if (!empty) {
+                empty = document.createElement('div');
+                empty.id = 'emptyState';
+                empty.className = 'bg-white rounded-2xl border border-slate-200 p-8 text-center';
+                empty.innerHTML = `
+                    <div class="text-5xl mb-3">🎉</div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">该分类下暂无卡片</h3>
+                    <p class="text-slate-500 text-sm mb-4">请切换其他分类或添加更多学习内容</p>
+                    <button onclick="setCategory('all')" class="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors text-sm">查看全部卡片</button>
+                `;
+                main.appendChild(empty);
+            }
+            empty.classList.remove('hidden');
+        }
+
+        // ==================== Flip Mode ====================
         function loadFlipCard(card) {
             document.getElementById('flipCategory').textContent = getCategoryName(card.category);
             document.getElementById('flipQuestion').textContent = card.question;
             document.getElementById('flipAnswer').innerHTML = card.answer;
             document.getElementById('flipCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
-            
-            // Reset flip
             document.getElementById('flipCardInner').classList.remove('rotate-y-180');
+            
+            // Auto speak if enabled
+            if (ttsEnabled) {
+                setTimeout(() => speakText(card.question), 300);
+            }
         }
 
         function flipCard() {
             document.getElementById('flipCardInner').classList.toggle('rotate-y-180');
+            
+            // Speak answer when flipped to back
+            if (ttsEnabled && document.getElementById('flipCardInner').classList.contains('rotate-y-180')) {
+                setTimeout(() => speakAnswer(), 400);
+            }
         }
 
         function showHint() {
@@ -1326,8 +1202,6 @@ function effect(fn) {
             updateStreak();
             updateStats();
             renderCategoryNav();
-            
-            // Confetti effect
             createConfetti();
             
             setTimeout(() => nextCard(), 500);
@@ -1343,52 +1217,152 @@ function effect(fn) {
             loadCard();
         }
 
-        // ==================== Fill Mode ====================
+        // ==================== Fill Mode (Enhanced) ====================
+        let currentFillBlanks = [];
+
         function loadFillCard(card) {
             if (!card.fill) {
-                nextFill();
+                currentIndex++;
+                loadFillCard(filteredCards()[currentIndex % filteredCards().length]);
                 return;
             }
             
             document.getElementById('fillCategory').textContent = getCategoryName(card.category);
             document.getElementById('fillCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
-            document.getElementById('fillContent').innerHTML = card.fill.text;
             document.getElementById('fillHintText').textContent = card.fill.hint;
             
             document.getElementById('fillHint').classList.add('hidden');
             document.getElementById('fillResult').classList.add('hidden');
             
-            // Setup blanks
-            document.querySelectorAll('.blank').forEach(blank => {
-                blank.contentEditable = true;
-                blank.classList.remove('correct', 'wrong');
-                blank.textContent = '_____';
-                blank.style.minWidth = '60px';
-                blank.style.display = 'inline-block';
-                blank.style.textAlign = 'center';
+            // Build fill content with structured blanks
+            const contentDiv = document.getElementById('fillContent');
+            contentDiv.innerHTML = '';
+            currentFillBlanks = [];
+            
+            let blankIndex = 0;
+            card.fill.text.forEach((item, idx) => {
+                if (item.type === 'text') {
+                    const span = document.createElement('span');
+                    span.textContent = item.content;
+                    contentDiv.appendChild(span);
+                } else if (item.type === 'blank') {
+                    blankIndex++;
+                    const wrapper = document.createElement('span');
+                    wrapper.className = 'blank-wrapper';
+                    
+                    const label = document.createElement('div');
+                    label.className = 'blank-label';
+                    label.textContent = `空${blankIndex}`;
+                    wrapper.appendChild(label);
+                    
+                    const input = document.createElement('span');
+                    input.className = 'fill-blank';
+                    input.contentEditable = true;
+                    input.dataset.answer = item.answer;
+                    input.dataset.hint = item.hint || '';
+                    input.dataset.index = blankIndex - 1;
+                    input.textContent = '';
+                    input.setAttribute('placeholder', '？');
+                    
+                    // Prevent newlines in blank
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            // Move to next blank or check
+                            const nextBlank = currentFillBlanks[blankIndex];
+                            if (nextBlank) nextBlank.focus();
+                            else checkFill();
+                        }
+                    });
+                    
+                    // Auto-check on blur if has content
+                    input.addEventListener('blur', () => {
+                        if (input.textContent.trim()) {
+                            checkSingleBlank(input);
+                        }
+                    });
+                    
+                    wrapper.appendChild(input);
+                    contentDiv.appendChild(wrapper);
+                    currentFillBlanks.push(input);
+                }
             });
+            
+            // Auto speak if enabled
+            if (ttsEnabled) {
+                setTimeout(() => speakFillQuestion(), 300);
+            }
+        }
+
+        function checkSingleBlank(input) {
+            const answer = input.dataset.answer;
+            const userAnswer = input.textContent.trim();
+            
+            if (!userAnswer) return;
+            
+            // Support multiple correct answers separated by |
+            const correctAnswers = answer.split('|').map(a => a.trim());
+            const isCorrect = correctAnswers.some(a => a === userAnswer);
+            
+            input.classList.remove('correct', 'wrong', 'hint-revealed');
+            if (isCorrect) {
+                input.classList.add('correct');
+            } else {
+                input.classList.add('wrong');
+            }
+            
+            return isCorrect;
         }
 
         function showFillHint() {
             document.getElementById('fillHint').classList.remove('hidden');
+            
+            // Also show hints for wrong blanks
+            currentFillBlanks.forEach(blank => {
+                if (blank.classList.contains('wrong') || !blank.textContent.trim()) {
+                    const hint = blank.dataset.hint;
+                    if (hint && !blank.classList.contains('correct')) {
+                        blank.title = `提示: ${hint}`;
+                        blank.classList.add('hint-revealed');
+                    }
+                }
+            });
+        }
+
+        function revealAllBlanks() {
+            currentFillBlanks.forEach(blank => {
+                blank.textContent = blank.dataset.answer.split('|')[0];
+                blank.classList.remove('wrong', 'hint-revealed');
+                blank.classList.add('correct');
+                blank.contentEditable = false;
+            });
+            
+            const resultBox = document.getElementById('fillResultBox');
+            const resultTitle = document.getElementById('fillResultTitle');
+            const resultText = document.getElementById('fillResultText');
+            
+            document.getElementById('fillResult').classList.remove('hidden');
+            resultBox.className = 'p-3 rounded-lg bg-amber-50 border border-amber-200';
+            resultTitle.textContent = '👁️ 已显示答案';
+            resultTitle.className = 'font-medium mb-1 text-amber-800 text-sm';
+            resultText.textContent = '建议先自己思考，再查看答案记忆更深刻';
+            resultText.className = 'text-xs text-amber-700';
         }
 
         function checkFill() {
-            const blanks = document.querySelectorAll('.blank');
             let allCorrect = true;
+            let allFilled = true;
             
-            blanks.forEach(blank => {
-                const answer = blank.dataset.answer;
-                const input = blank.textContent.trim();
-                
-                if (input === answer || (answer.includes('|') && answer.split('|').some(a => a.trim() === input))) {
-                    blank.classList.add('correct');
-                    blank.classList.remove('wrong');
-                } else {
-                    blank.classList.add('wrong');
-                    blank.classList.remove('correct');
+            currentFillBlanks.forEach(blank => {
+                const userAnswer = blank.textContent.trim();
+                if (!userAnswer) {
+                    allFilled = false;
                     allCorrect = false;
+                    return;
                 }
+                
+                const isCorrect = checkSingleBlank(blank);
+                if (!isCorrect) allCorrect = false;
             });
             
             const resultBox = document.getElementById('fillResultBox');
@@ -1397,24 +1371,37 @@ function effect(fn) {
             
             document.getElementById('fillResult').classList.remove('hidden');
             
+            if (!allFilled) {
+                resultBox.className = 'p-3 rounded-lg bg-yellow-50 border border-yellow-200';
+                resultTitle.textContent = '⚠️ 还有未填写的空';
+                resultTitle.className = 'font-medium mb-1 text-yellow-800 text-sm';
+                resultText.textContent = '请补全所有空缺后再检查';
+                resultText.className = 'text-xs text-yellow-700';
+                return;
+            }
+            
             if (allCorrect) {
-                resultBox.className = 'p-4 rounded-lg bg-green-50 border border-green-200';
+                resultBox.className = 'p-3 rounded-lg bg-green-50 border border-green-200';
                 resultTitle.textContent = '✅ 全部正确！';
-                resultTitle.className = 'font-medium mb-1 text-green-800';
+                resultTitle.className = 'font-medium mb-1 text-green-800 text-sm';
                 resultText.textContent = '太棒了，继续下一张！';
-                resultText.className = 'text-sm text-green-700';
+                resultText.className = 'text-xs text-green-700';
                 
                 streak++;
                 updateStreak();
                 recordHistory(filteredCards()[currentIndex % filteredCards().length].id, true);
+                createConfetti();
+                
+                // Disable all blanks
+                currentFillBlanks.forEach(blank => blank.contentEditable = false);
                 
                 setTimeout(() => nextFill(), 1500);
             } else {
-                resultBox.className = 'p-4 rounded-lg bg-red-50 border border-red-200';
+                resultBox.className = 'p-3 rounded-lg bg-red-50 border border-red-200';
                 resultTitle.textContent = '❌ 有错误';
-                resultTitle.className = 'font-medium mb-1 text-red-800';
-                resultText.textContent = '红色标注处答案不正确，再想想？';
-                resultText.className = 'text-sm text-red-700';
+                resultTitle.className = 'font-medium mb-1 text-red-800 text-sm';
+                resultText.textContent = '红色标注处答案不正确，点击提示按钮查看线索';
+                resultText.className = 'text-xs text-red-700';
                 
                 streak = 0;
                 updateStreak();
@@ -1432,7 +1419,8 @@ function effect(fn) {
         // ==================== Write Mode ====================
         function loadWriteCard(card) {
             if (!card.write) {
-                nextWrite();
+                currentIndex++;
+                loadWriteCard(filteredCards()[currentIndex % filteredCards().length]);
                 return;
             }
             
@@ -1446,6 +1434,10 @@ function effect(fn) {
             document.getElementById('writeInput').value = '';
             document.getElementById('writeHint').classList.add('hidden');
             document.getElementById('writeResult').classList.add('hidden');
+            
+            if (ttsEnabled) {
+                setTimeout(() => speakText(card.question + '。' + card.write.desc), 300);
+            }
         }
 
         function showWriteHint() {
@@ -1467,39 +1459,49 @@ function effect(fn) {
             updateStreak();
             recordHistory(filteredCards()[currentIndex % filteredCards().length].id, true);
             updateStats();
+            
+            if (ttsEnabled) {
+                setTimeout(() => speakText(document.getElementById('writeAnswer').textContent), 500);
+            }
         }
 
         function nextWrite() {
             currentIndex++;
             loadWriteCard(filteredCards()[currentIndex % filteredCards().length]);
         }
+
         // ==================== Choice Mode ====================
+        let selectedChoice = null;
+
         function loadChoiceCard(card) {
             if (!card.choice) {
-                nextChoice();
+                currentIndex++;
+                loadChoiceCard(filteredCards()[currentIndex % filteredCards().length]);
                 return;
             }
             
             document.getElementById('choiceCategory').textContent = getCategoryName(card.category);
             document.getElementById('choiceCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
-            document.getElementById('choiceQuestion').innerHTML = card.choice.question.replace(/\n/g, '<br>');
+            document.getElementById('choiceQuestion').innerHTML = card.choice.question.replace(/\\n/g, '<br>');
             
             const optionsContainer = document.getElementById('choiceOptions');
             optionsContainer.innerHTML = '';
             
             card.choice.options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
-                btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-slate-700 font-medium';
-                btn.innerHTML = `<span class="inline-block w-8 h-8 rounded-full bg-slate-100 text-slate-600 text-center leading-8 mr-3 text-sm font-bold">${String.fromCharCode(65 + idx)}</span>${opt}`;
+                btn.className = 'w-full text-left p-3.5 rounded-xl border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-slate-700 text-sm font-medium';
+                btn.innerHTML = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs font-bold mr-3">${String.fromCharCode(65 + idx)}</span>${opt}`;
                 btn.onclick = () => selectChoice(idx, btn);
                 optionsContainer.appendChild(btn);
             });
             
             document.getElementById('choiceResult').classList.add('hidden');
             selectedChoice = null;
+            
+            if (ttsEnabled) {
+                setTimeout(() => speakText(card.choice.question), 300);
+            }
         }
-
-        let selectedChoice = null;
 
         function selectChoice(index, btnElement) {
             if (selectedChoice !== null) return;
@@ -1508,7 +1510,6 @@ function effect(fn) {
             const card = filteredCards()[currentIndex % filteredCards().length];
             const isCorrect = index === card.choice.correct;
             
-            // Disable all buttons
             document.querySelectorAll('#choiceOptions button').forEach((btn, idx) => {
                 btn.disabled = true;
                 if (idx === card.choice.correct) {
@@ -1526,24 +1527,28 @@ function effect(fn) {
             resultBox.classList.remove('hidden');
             
             if (isCorrect) {
-                resultBox.className = 'mb-6 p-4 rounded-lg bg-green-50 border border-green-200';
+                resultBox.className = 'mb-4 p-3 rounded-lg bg-green-50 border border-green-200';
                 document.getElementById('choiceResultTitle').textContent = '✅ 回答正确！';
-                document.getElementById('choiceResultTitle').className = 'font-medium mb-1 text-green-800';
+                document.getElementById('choiceResultTitle').className = 'font-medium mb-1 text-green-800 text-sm';
                 streak++;
                 updateStreak();
                 recordHistory(card.id, true);
                 createConfetti();
             } else {
-                resultBox.className = 'mb-6 p-4 rounded-lg bg-red-50 border border-red-200';
+                resultBox.className = 'mb-4 p-3 rounded-lg bg-red-50 border border-red-200';
                 document.getElementById('choiceResultTitle').textContent = '❌ 回答错误';
-                document.getElementById('choiceResultTitle').className = 'font-medium mb-1 text-red-800';
+                document.getElementById('choiceResultTitle').className = 'font-medium mb-1 text-red-800 text-sm';
                 streak = 0;
                 updateStreak();
                 recordHistory(card.id, false);
             }
             
             document.getElementById('choiceResultText').innerHTML = `<strong>解析：</strong>${card.choice.explanation}`;
-            document.getElementById('choiceResultText').className = 'text-sm text-slate-700';
+            document.getElementById('choiceResultText').className = 'text-xs text-slate-700';
+            
+            if (ttsEnabled) {
+                speakText(isCorrect ? '回答正确！' + card.choice.explanation : '回答错误。' + card.choice.explanation);
+            }
             
             updateStats();
         }
@@ -1563,7 +1568,7 @@ function effect(fn) {
             const el = document.getElementById('streakCount');
             el.textContent = streak;
             el.classList.remove('streak-pop');
-            void el.offsetWidth; // Trigger reflow
+            void el.offsetWidth;
             el.classList.add('streak-pop');
         }
 
@@ -1576,32 +1581,9 @@ function effect(fn) {
             localStorage.setItem('cardHistory', JSON.stringify(cardHistory));
         }
 
-        function showEmptyState() {
-            const containers = ['flipContainer', 'fillContainer', 'writeContainer', 'choiceContainer'];
-            containers.forEach(id => document.getElementById(id).classList.add('hidden'));
-            
-            const main = document.querySelector('main');
-            if (!document.getElementById('emptyState')) {
-                const empty = document.createElement('div');
-                empty.id = 'emptyState';
-                empty.className = 'bg-white rounded-2xl border border-slate-200 p-12 text-center';
-                empty.innerHTML = `
-                    <div class="text-6xl mb-4">🎉</div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">该分类下暂无卡片</h3>
-                    <p class="text-slate-500 mb-6">请切换其他分类或添加更多学习内容</p>
-                    <button onclick="setCategory('all')" class="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
-                        查看全部卡片
-                    </button>
-                `;
-                main.insertBefore(empty, main.children[2]);
-            }
-            document.getElementById('emptyState').classList.remove('hidden');
-        }
-
-        // ==================== Confetti Effect ====================
         function createConfetti() {
             const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 25; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
                 confetti.style.left = Math.random() * 100 + 'vw';
@@ -1609,18 +1591,14 @@ function effect(fn) {
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
                 confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-                
                 const duration = 2 + Math.random() * 2;
                 confetti.style.transition = `top ${duration}s ease-in, transform ${duration}s ease-in, opacity ${duration}s ease-in`;
-                
                 document.body.appendChild(confetti);
-                
                 setTimeout(() => {
                     confetti.style.top = '100vh';
                     confetti.style.transform = `rotate(${Math.random() * 720}deg)`;
                     confetti.style.opacity = '0';
                 }, 50);
-                
                 setTimeout(() => confetti.remove(), duration * 1000);
             }
         }
@@ -1628,7 +1606,12 @@ function effect(fn) {
         // ==================== Keyboard Shortcuts ====================
         function setupKeyboard() {
             document.addEventListener('keydown', (e) => {
-                if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+                if (e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+                    if (e.key === 'Escape') {
+                        e.target.blur();
+                    }
+                    return;
+                }
                 
                 switch(e.key) {
                     case ' ':
@@ -1650,6 +1633,10 @@ function effect(fn) {
                         else if (currentMode === 'fill') showFillHint();
                         else if (currentMode === 'write') showWriteHint();
                         break;
+                    case 's':
+                    case 'S':
+                        toggleTTS();
+                        break;
                     case 'Enter':
                         if (currentMode === 'fill') checkFill();
                         else if (currentMode === 'write') checkWrite();
@@ -1658,7 +1645,7 @@ function effect(fn) {
             });
         }
 
-        // ==================== Data Persistence Helpers ====================
+        // ==================== Data Persistence ====================
         function resetProgress() {
             if (confirm('确定要重置所有学习进度吗？此操作不可撤销。')) {
                 masteredCards.clear();
@@ -1673,8 +1660,6 @@ function effect(fn) {
                 loadCard();
             }
         }
-
-        // Add reset button to header (hidden by default, can be triggered via console)
         window.resetProgress = resetProgress;
 
         // ==================== Start ====================
@@ -1682,3 +1667,27 @@ function effect(fn) {
     </script>
 </body>
 </html>
+'''
+
+with open('/mnt/agents/output/index_part3.html', 'w', encoding='utf-8') as f:
+    f.write(html_part3)
+
+print("Part 3 saved successfully")
+print(f"Length: {len(html_part3)} characters")
+
+# Combine all parts into a single file
+with open('/mnt/agents/output/index_part1.html', 'r', encoding='utf-8') as f:
+    part1 = f.read()
+with open('/mnt/agents/output/index_part2.html', 'r', encoding='utf-8') as f:
+    part2 = f.read()
+with open('/mnt/agents/output/index_part3.html', 'r', encoding='utf-8') as f:
+    part3 = f.read()
+
+full_html = part1 + part2 + part3
+
+with open('/mnt/agents/output/index.html', 'w', encoding='utf-8') as f:
+    f.write(full_html)
+
+print(f"Complete file saved: /mnt/agents/output/index.html")
+print(f"Total size: {len(full_html)} characters ({len(full_html) / 1024:.1f} KB)")
+print(f"Total lines: {full_html.count(chr(10))}")
