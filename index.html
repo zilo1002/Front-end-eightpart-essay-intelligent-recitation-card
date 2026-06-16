@@ -1,8 +1,4 @@
-
-# 生成完整的增强版 index.html，包含填空和朗读功能
-# 由于代码超过输出限制，我将分段生成并保存到文件
-
-html_part1 = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -150,7 +146,7 @@ html_part1 = '''<!DOCTYPE html>
     </header>
 
     <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex gap-4 sm:gap-6">
-        
+
         <!-- Sidebar -->
         <aside class="w-56 lg:block shrink-0 hidden">
             <div class="bg-white rounded-2xl border border-slate-200 p-4 sticky top-20">
@@ -180,7 +176,7 @@ html_part1 = '''<!DOCTYPE html>
 
         <!-- Main Content -->
         <main class="flex-1 min-w-0">
-            
+
             <!-- Mobile Category Selector -->
             <div class="lg:hidden mb-3 overflow-x-auto pb-2" id="mobileCategoryNav"></div>
 
@@ -210,7 +206,7 @@ html_part1 = '''<!DOCTYPE html>
 
             <!-- Card Container -->
             <div class="relative">
-                
+
                 <!-- Flip Mode -->
                 <div id="flipContainer" class="mode-container">
                     <div class="perspective-1000 h-[420px] sm:h-[480px] cursor-pointer" onclick="flipCard()">
@@ -259,7 +255,7 @@ html_part1 = '''<!DOCTYPE html>
                                 <span class="text-slate-400 text-xs" id="fillCounter">1 / 10</span>
                             </div>
                         </div>
-                        
+
                         <div class="mb-6">
                             <div class="flex items-center gap-2 mb-3">
                                 <h3 class="text-sm font-semibold text-slate-700">请补全以下概念中的空缺部分：</h3>
@@ -375,17 +371,7 @@ html_part1 = '''<!DOCTYPE html>
     </div>
 
     <script>
-'''
 
-# Save first part
-with open('/mnt/agents/output/index_part1.html', 'w', encoding='utf-8') as f:
-    f.write(html_part1)
-
-print("Part 1 saved successfully")
-print(f"Length: {len(html_part1)} characters")
-
-# Continue with the data and core functions
-html_part2 = '''
         // ==================== Data ====================
         const categories = [
             { id: 'js', name: 'JavaScript 基础', icon: '⚡', count: 0 },
@@ -401,7 +387,7 @@ html_part2 = '''
                 id: 1,
                 category: 'js',
                 question: '什么是闭包？请解释其原理和应用场景。',
-                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">定义：</strong>闭包是指有权访问另一个函数作用域中的变量的函数。</p><div class="code-block mono text-xs">function createCounter() {\\n    let count = 0;\\n    return function() {\\n        return ++count;\\n    };\\n}\\nconst counter = createCounter();</div><p><strong class="text-blue-300">原理：</strong>通过作用域链实现，内部函数持有外部函数的变量对象，即使外部函数执行完毕，这些变量也不会被垃圾回收。</p><p><strong class="text-blue-300">应用：</strong>数据私有化、柯里化、防抖节流、函数工厂。</p><p><strong class="text-blue-300">注意：</strong>过度使用可能导致内存泄漏。</p></div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">定义：</strong>闭包是指有权访问另一个函数作用域中的变量的函数。</p><div class="code-block mono text-xs">function createCounter() {\n    let count = 0;\n    return function() {\n        return ++count;\n    };\n}\nconst counter = createCounter();</div><p><strong class="text-blue-300">原理：</strong>通过作用域链实现，内部函数持有外部函数的变量对象，即使外部函数执行完毕，这些变量也不会被垃圾回收。</p><p><strong class="text-blue-300">应用：</strong>数据私有化、柯里化、防抖节流、函数工厂。</p><p><strong class="text-blue-300">注意：</strong>过度使用可能导致内存泄漏。</p></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: '闭包是指有权访问另一个' },
@@ -421,7 +407,7 @@ html_part2 = '''
                 write: {
                     desc: '请手写一个防抖函数（debounce），要求支持立即执行选项和取消功能。',
                     hint: '核心：定时器 + 时间戳；注意 this 指向和参数传递',
-                    answer: `function debounce(fn, delay, immediate = false) {\\n    let timer = null;\\n    \\n    function debounced(...args) {\\n        const context = this;\\n        const callNow = immediate && !timer;\\n        \\n        clearTimeout(timer);\\n        \\n        timer = setTimeout(() => {\\n            timer = null;\\n            if (!immediate) fn.apply(context, args);\\n        }, delay);\\n        \\n        if (callNow) fn.apply(context, args);\\n    }\\n    \\n    debounced.cancel = () => {\\n        clearTimeout(timer);\\n        timer = null;\\n    };\\n    \\n    return debounced;\\n}`
+                    answer: `function debounce(fn, delay, immediate = false) {\n    let timer = null;\n    \n    function debounced(...args) {\n        const context = this;\n        const callNow = immediate && !timer;\n        \n        clearTimeout(timer);\n        \n        timer = setTimeout(() => {\n            timer = null;\n            if (!immediate) fn.apply(context, args);\n        }, delay);\n        \n        if (callNow) fn.apply(context, args);\n    }\n    \n    debounced.cancel = () => {\n        clearTimeout(timer);\n        timer = null;\n    };\n    \n    return debounced;\n}`
                 },
                 choice: {
                     question: '以下关于闭包的说法，错误的是？',
@@ -440,7 +426,7 @@ html_part2 = '''
                 id: 2,
                 category: 'js',
                 question: '解释 Event Loop 中宏任务与微任务的执行顺序。',
-                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">执行顺序：</strong>同步代码 → 微任务队列清空 → 宏任务队列取一个执行 → 重复。</p><div class="code-block mono text-xs">console.log('1'); // 同步\\nsetTimeout(() => console.log('2'), 0); // 宏任务\\nPromise.resolve().then(() => console.log('3')); // 微任务\\nconsole.log('4'); // 同步\\n// 输出: 1 4 3 2</div><p><strong class="text-blue-300">微任务：</strong>Promise.then/catch/finally、MutationObserver、queueMicrotask。</p><p><strong class="text-blue-300">宏任务：</strong>setTimeout/setInterval、setImmediate(Node)、I/O、UI rendering。</p><p><strong class="text-blue-300">Node.js 差异：</strong>分为 6 个 phases（timers → pending → idle → poll → check → close）。</p></div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">执行顺序：</strong>同步代码 → 微任务队列清空 → 宏任务队列取一个执行 → 重复。</p><div class="code-block mono text-xs">console.log('1'); // 同步\nsetTimeout(() => console.log('2'), 0); // 宏任务\nPromise.resolve().then(() => console.log('3')); // 微任务\nconsole.log('4'); // 同步\n// 输出: 1 4 3 2</div><p><strong class="text-blue-300">微任务：</strong>Promise.then/catch/finally、MutationObserver、queueMicrotask。</p><p><strong class="text-blue-300">宏任务：</strong>setTimeout/setInterval、setImmediate(Node)、I/O、UI rendering。</p><p><strong class="text-blue-300">Node.js 差异：</strong>分为 6 个 phases（timers → pending → idle → poll → check → close）。</p></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: 'Event Loop 执行顺序：首先执行所有' },
@@ -460,10 +446,10 @@ html_part2 = '''
                 write: {
                     desc: '请写出以下代码的输出顺序，并解释原因。',
                     hint: '先标出每个任务是宏任务还是微任务',
-                    answer: `console.log('1');\\nsetTimeout(() => console.log('2'), 0);\\nPromise.resolve().then(() => console.log('3'));\\nconsole.log('4');\\n\\n// 输出: 1 4 3 2\\n\\n// 解析：\\n// 1. 同步代码: 1, 4\\n// 2. 微任务: Promise.then → 3  \\n// 3. 宏任务: setTimeout → 2`
+                    answer: `console.log('1');\nsetTimeout(() => console.log('2'), 0);\nPromise.resolve().then(() => console.log('3'));\nconsole.log('4');\n\n// 输出: 1 4 3 2\n\n// 解析：\n// 1. 同步代码: 1, 4\n// 2. 微任务: Promise.then → 3  \n// 3. 宏任务: setTimeout → 2`
                 },
                 choice: {
-                    question: '以下代码的输出顺序是？\\nconsole.log("1"); Promise.resolve().then(() => console.log("2")); setTimeout(() => console.log("3"), 0); console.log("4");',
+                    question: '以下代码的输出顺序是？\nconsole.log("1"); Promise.resolve().then(() => console.log("2")); setTimeout(() => console.log("3"), 0); console.log("4");',
                     options: ['1 2 3 4', '1 4 2 3', '1 4 3 2', '1 2 4 3'],
                     correct: 2,
                     explanation: '同步代码(1,4) → 微任务 Promise(2) → 宏任务 setTimeout(3)'
@@ -474,7 +460,7 @@ html_part2 = '''
                 id: 3,
                 category: 'js',
                 question: '手写 new 操作符的实现。',
-                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">new 四件事：</strong></p><ol class="list-decimal list-inside space-y-1 text-slate-300"><li>创建空对象</li><li>链接到原型</li><li>绑定 this 执行构造函数</li><li>返回对象（若构造函数无返回值或返回非对象）</li></ol><div class="code-block mono text-xs">function myNew(ctor, ...args) {\\n    const obj = Object.create(ctor.prototype);\\n    const result = ctor.apply(obj, args);\\n    return (result !== null && \\n           (typeof result === 'object' || typeof result === 'function')) \\n           ? result : obj;\\n}</div></div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">new 四件事：</strong></p><ol class="list-decimal list-inside space-y-1 text-slate-300"><li>创建空对象</li><li>链接到原型</li><li>绑定 this 执行构造函数</li><li>返回对象（若构造函数无返回值或返回非对象）</li></ol><div class="code-block mono text-xs">function myNew(ctor, ...args) {\n    const obj = Object.create(ctor.prototype);\n    const result = ctor.apply(obj, args);\n    return (result !== null && \n           (typeof result === 'object' || typeof result === 'function')) \n           ? result : obj;\n}</div></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: 'new 操作符的实现步骤：1. 创建空对象并链接到构造函数的' },
@@ -490,7 +476,7 @@ html_part2 = '''
                 write: {
                     desc: '请手写实现 new 操作符。',
                     hint: 'Object.create + apply + 判断返回值类型',
-                    answer: `function myNew(constructor, ...args) {\\n    // 1. 创建对象，继承构造函数原型\\n    const obj = Object.create(constructor.prototype);\\n    \\n    // 2. 执行构造函数，绑定 this\\n    const result = constructor.apply(obj, args);\\n    \\n    // 3. 判断返回值\\n    return (result !== null && \\n           (typeof result === 'object' || typeof result === 'function')) \\n           ? result : obj;\\n}`
+                    answer: `function myNew(constructor, ...args) {\n    // 1. 创建对象，继承构造函数原型\n    const obj = Object.create(constructor.prototype);\n    \n    // 2. 执行构造函数，绑定 this\n    const result = constructor.apply(obj, args);\n    \n    // 3. 判断返回值\n    return (result !== null && \n           (typeof result === 'object' || typeof result === 'function')) \n           ? result : obj;\n}`
                 },
                 choice: {
                     question: 'new 操作符不会执行以下哪个步骤？',
@@ -527,10 +513,10 @@ html_part2 = '''
                 write: {
                     desc: '请手写 call 的实现。',
                     hint: '将函数作为对象的临时方法执行',
-                    answer: `Function.prototype.myCall = function(context, ...args) {\\n    context = context || window;\\n    const fnSymbol = Symbol('fn');\\n    context[fnSymbol] = this;\\n    const result = context[fnSymbol](...args);\\n    delete context[fnSymbol];\\n    return result;\\n};`
+                    answer: `Function.prototype.myCall = function(context, ...args) {\n    context = context || window;\n    const fnSymbol = Symbol('fn');\n    context[fnSymbol] = this;\n    const result = context[fnSymbol](...args);\n    delete context[fnSymbol];\n    return result;\n};`
                 },
                 choice: {
-                    question: '以下代码中 foo() 的 this 指向？\\nfunction foo() { console.log(this.a); }\\nvar a = 2;\\nfoo();',
+                    question: '以下代码中 foo() 的 this 指向？\nfunction foo() { console.log(this.a); }\nvar a = 2;\nfoo();',
                     options: ['window/全局对象', 'undefined', 'foo 自身', '抛出错误'],
                     correct: 0,
                     explanation: '直接调用 foo() 属于默认绑定，非严格模式下 this 指向全局对象。'
@@ -541,7 +527,7 @@ html_part2 = '''
                 id: 5,
                 category: 'js',
                 question: '手写 Promise（基础版）。',
-                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">核心要点：</strong>状态机（pending/fulfilled/rejected）、then 方法链式调用、异步执行回调。</p><div class="code-block mono text-xs">class MyPromise {\\n    constructor(executor) {\\n        this.state = 'pending';\\n        this.value = undefined;\\n        this.reason = undefined;\\n        this.onFulfilledCallbacks = [];\\n        this.onRejectedCallbacks = [];\\n        \\n        const resolve = (value) => {\\n            if (this.state === 'pending') {\\n                this.state = 'fulfilled';\\n                this.value = value;\\n                this.onFulfilledCallbacks.forEach(fn => fn());\\n            }\\n        };\\n        \\n        const reject = (reason) => {\\n            if (this.state === 'pending') {\\n                this.state = 'rejected';\\n                this.reason = reason;\\n                this.onRejectedCallbacks.forEach(fn => fn());\\n            }\\n        };\\n        \\n        try { executor(resolve, reject); }\\n        catch (err) { reject(err); }\\n    }\\n    \\n    then(onFulfilled, onRejected) {\\n        if (this.state === 'fulfilled') onFulfilled(this.value);\\n        if (this.state === 'rejected') onRejected(this.reason);\\n        if (this.state === 'pending') {\\n            this.onFulfilledCallbacks.push(() => onFulfilled(this.value));\\n            this.onRejectedCallbacks.push(() => onRejected(this.reason));\\n        }\\n    }\\n}</div></div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">核心要点：</strong>状态机（pending/fulfilled/rejected）、then 方法链式调用、异步执行回调。</p><div class="code-block mono text-xs">class MyPromise {\n    constructor(executor) {\n        this.state = 'pending';\n        this.value = undefined;\n        this.reason = undefined;\n        this.onFulfilledCallbacks = [];\n        this.onRejectedCallbacks = [];\n        \n        const resolve = (value) => {\n            if (this.state === 'pending') {\n                this.state = 'fulfilled';\n                this.value = value;\n                this.onFulfilledCallbacks.forEach(fn => fn());\n            }\n        };\n        \n        const reject = (reason) => {\n            if (this.state === 'pending') {\n                this.state = 'rejected';\n                this.reason = reason;\n                this.onRejectedCallbacks.forEach(fn => fn());\n            }\n        };\n        \n        try { executor(resolve, reject); }\n        catch (err) { reject(err); }\n    }\n    \n    then(onFulfilled, onRejected) {\n        if (this.state === 'fulfilled') onFulfilled(this.value);\n        if (this.state === 'rejected') onRejected(this.reason);\n        if (this.state === 'pending') {\n            this.onFulfilledCallbacks.push(() => onFulfilled(this.value));\n            this.onRejectedCallbacks.push(() => onRejected(this.reason));\n        }\n    }\n}</div></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: 'Promise 有三种状态：' },
@@ -561,7 +547,7 @@ html_part2 = '''
                 write: {
                     desc: '请手写 Promise.all，要求支持所有 Promise 完成或任一 reject。',
                     hint: '计数器 + 数组存储结果',
-                    answer: `Promise.myAll = function(promises) {\\n    return new Promise((resolve, reject) => {\\n        const results = [];\\n        let completed = 0;\\n        \\n        promises.forEach((p, index) => {\\n            Promise.resolve(p).then(value => {\\n                results[index] = value;\\n                completed++;\\n                if (completed === promises.length) {\\n                    resolve(results);\\n                }\\n            }).catch(reject);\\n        });\\n        \\n        if (promises.length === 0) resolve([]);\\n    });\\n};`
+                    answer: `Promise.myAll = function(promises) {\n    return new Promise((resolve, reject) => {\n        const results = [];\n        let completed = 0;\n        \n        promises.forEach((p, index) => {\n            Promise.resolve(p).then(value => {\n                results[index] = value;\n                completed++;\n                if (completed === promises.length) {\n                    resolve(results);\n                }\n            }).catch(reject);\n        });\n        \n        if (promises.length === 0) resolve([]);\n    });\n};`
                 },
                 choice: {
                     question: 'Promise.then() 返回的是？',
@@ -600,7 +586,7 @@ html_part2 = '''
                 write: {
                     desc: '如何优化首屏加载速度？请列举至少 5 种方法。',
                     hint: '从资源加载、渲染阻塞、缓存策略角度思考',
-                    answer: `// 首屏优化方案：\\n1. 资源压缩与合并（Gzip、Tree Shaking）\\n2. 路由懒加载 + 组件按需加载\\n3. SSR / SSG（减少客户端渲染时间）\\n4. 图片优化（WebP、懒加载、响应式图片）\\n5. 关键 CSS 内联（Critical CSS）\\n6. DNS 预解析 / 预连接 / 预加载\\n7. Service Worker 缓存\\n8. HTTP/2 Server Push（或 Early Hints）`
+                    answer: `// 首屏优化方案：\n1. 资源压缩与合并（Gzip、Tree Shaking）\n2. 路由懒加载 + 组件按需加载\n3. SSR / SSG（减少客户端渲染时间）\n4. 图片优化（WebP、懒加载、响应式图片）\n5. 关键 CSS 内联（Critical CSS）\n6. DNS 预解析 / 预连接 / 预加载\n7. Service Worker 缓存\n8. HTTP/2 Server Push（或 Early Hints）`
                 },
                 choice: {
                     question: '以下哪个属性变化只会触发 Composite，不会触发 Layout 和 Paint？',
@@ -632,7 +618,7 @@ html_part2 = '''
                 write: {
                     desc: '请写出 Cache-Control 的常见指令及含义。',
                     hint: 'public/private/no-cache/no-store/max-age/s-maxage',
-                    answer: `Cache-Control 指令：\\n- public: 任何缓存都可存储\\n- private: 仅浏览器缓存\\n- no-cache: 必须重新验证（走协商缓存）\\n- no-store: 完全不缓存\\n- max-age=秒: 强缓存时间\\n- s-maxage=秒: CDN 缓存时间\\n- must-revalidate: 过期后必须验证`
+                    answer: `Cache-Control 指令：\n- public: 任何缓存都可存储\n- private: 仅浏览器缓存\n- no-cache: 必须重新验证（走协商缓存）\n- no-store: 完全不缓存\n- max-age=秒: 强缓存时间\n- s-maxage=秒: CDN 缓存时间\n- must-revalidate: 过期后必须验证`
                 },
                 choice: {
                     question: '以下哪个响应头表示资源可以被任何缓存存储？',
@@ -664,7 +650,7 @@ html_part2 = '''
                 write: {
                     desc: 'React 18 的 Automatic Batching 是什么？与之前版本有何不同？',
                     hint: 'setTimeout/Promise 中的 setState',
-                    answer: `// React 18 之前的 Batching：\\n// 只在 React 事件处理函数中自动批处理\\n// setTimeout/Promise 中的 setState 会同步触发多次渲染\\n\\n// React 18 的 Automatic Batching：\\n// 所有场景（包括 setTimeout、Promise、原生事件）都会自动批处理\\n// 减少不必要的重渲染\\n\\nsetTimeout(() => {\\n    setCount(c => c + 1); // 不会立即渲染\\n    setFlag(f => !f);     // 不会立即渲染\\n    // 退出事件后统一批处理渲染一次\\n}, 1000);`
+                    answer: `// React 18 之前的 Batching：\n// 只在 React 事件处理函数中自动批处理\n// setTimeout/Promise 中的 setState 会同步触发多次渲染\n\n// React 18 的 Automatic Batching：\n// 所有场景（包括 setTimeout、Promise、原生事件）都会自动批处理\n// 减少不必要的重渲染\n\nsetTimeout(() => {\n    setCount(c => c + 1); // 不会立即渲染\n    setFlag(f => !f);     // 不会立即渲染\n    // 退出事件后统一批处理渲染一次\n}, 1000);`
                 },
                 choice: {
                     question: 'Fiber 节点中用于指向父节点的属性是？',
@@ -678,7 +664,7 @@ html_part2 = '''
                 id: 9,
                 category: 'react',
                 question: 'Hooks 为什么不能放在 if 或循环中？',
-                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">原因：</strong>React 通过<strong>调用顺序</strong>来区分不同的 Hook，而不是通过名称。</p><div class="code-block mono text-xs">// React 内部用数组存储 Hook 状态\\nconst hooks = [];\\nlet idx = 0;\\n\\nfunction useState(initial) {\\n    const state = hooks[idx] || initial;\\n    hooks[idx] = state;\\n    const _idx = idx;\\n    idx++;\\n    return [state, (newVal) => hooks[_idx] = newVal];\\n}</div><p><strong class="text-blue-300">条件渲染会破坏顺序对应关系：</strong></p><div class="code-block mono text-xs">if (condition) {\\n    const [state, setState] = useState(); // 条件为 false 时跳过，索引错位！\\n}</div></div>`,
+                answer: `<div class="space-y-3 text-sm"><p><strong class="text-blue-300">原因：</strong>React 通过<strong>调用顺序</strong>来区分不同的 Hook，而不是通过名称。</p><div class="code-block mono text-xs">// React 内部用数组存储 Hook 状态\nconst hooks = [];\nlet idx = 0;\n\nfunction useState(initial) {\n    const state = hooks[idx] || initial;\n    hooks[idx] = state;\n    const _idx = idx;\n    idx++;\n    return [state, (newVal) => hooks[_idx] = newVal];\n}</div><p><strong class="text-blue-300">条件渲染会破坏顺序对应关系：</strong></p><div class="code-block mono text-xs">if (condition) {\n    const [state, setState] = useState(); // 条件为 false 时跳过，索引错位！\n}</div></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: 'Hooks 依赖' },
@@ -694,10 +680,10 @@ html_part2 = '''
                 write: {
                     desc: '请手写一个简化版的 useState。',
                     hint: '数组存储 + 闭包 + 触发重新渲染',
-                    answer: `let hooks = [];\\nlet idx = 0;\\n\\nfunction useState(initialValue) {\\n    const state = hooks[idx] !== undefined ? hooks[idx] : initialValue;\\n    hooks[idx] = state;\\n    const _idx = idx;\\n    idx++;\\n    \\n    function setState(newValue) {\\n        hooks[_idx] = newValue;\\n        render(); // 触发重新渲染\\n    }\\n    \\n    return [state, setState];\\n}\\n\\nfunction MyComponent() {\\n    const [count, setCount] = useState(0);\\n    // ...\\n}`
+                    answer: `let hooks = [];\nlet idx = 0;\n\nfunction useState(initialValue) {\n    const state = hooks[idx] !== undefined ? hooks[idx] : initialValue;\n    hooks[idx] = state;\n    const _idx = idx;\n    idx++;\n    \n    function setState(newValue) {\n        hooks[_idx] = newValue;\n        render(); // 触发重新渲染\n    }\n    \n    return [state, setState];\n}\n\nfunction MyComponent() {\n    const [count, setCount] = useState(0);\n    // ...\n}`
                 },
                 choice: {
-                    question: '以下代码会有什么问题？\\nfunction Foo() {\\n  if (condition) {\\n    const [state] = useState(0);\\n  }\\n  const [other] = useState(1);\\n}',
+                    question: '以下代码会有什么问题？\nfunction Foo() {\n  if (condition) {\n    const [state] = useState(0);\n  }\n  const [other] = useState(1);\n}',
                     options: [
                         '语法错误',
                         'Hook 调用顺序不稳定，导致状态错位',
@@ -733,7 +719,7 @@ html_part2 = '''
                 write: {
                     desc: '为什么不建议使用数组索引作为 key？什么情况下可以？',
                     hint: '重排场景 vs 静态列表',
-                    answer: `// 不建议使用索引作为 key 的情况：\\n// 1. 列表会重排（拖拽排序、筛选）\\n// 2. 列表项有受控组件或内部状态\\n// 因为索引变化会导致 React 误判为不同组件，状态错位\\n\\n// 可以使用索引作为 key 的情况：\\n// 1. 纯展示列表，无内部状态\\n// 2. 列表不会增删改，只会整体替换\\n// 3. 列表项是简单的文本/图片\\n\\n// 最佳实践：使用唯一业务 ID（如数据库主键）`
+                    answer: `// 不建议使用索引作为 key 的情况：\n// 1. 列表会重排（拖拽排序、筛选）\n// 2. 列表项有受控组件或内部状态\n// 因为索引变化会导致 React 误判为不同组件，状态错位\n\n// 可以使用索引作为 key 的情况：\n// 1. 纯展示列表，无内部状态\n// 2. 列表不会增删改，只会整体替换\n// 3. 列表项是简单的文本/图片\n\n// 最佳实践：使用唯一业务 ID（如数据库主键）`
                 },
                 choice: {
                     question: 'React Diff 算法的时间复杂度是？',
@@ -765,7 +751,7 @@ html_part2 = '''
                 write: {
                     desc: '请手写一个简化版的 Vue3 reactive 实现。',
                     hint: 'Proxy + Reflect + track/trigger',
-                    answer: `let activeEffect = null;\\n\\nfunction reactive(target) {\\n    return new Proxy(target, {\\n        get(obj, key) {\\n            track(obj, key);\\n            return obj[key];\\n        },\\n        set(obj, key, value) {\\n            obj[key] = value;\\n            trigger(obj, key);\\n            return true;\\n        }\\n    });\\n}\\n\\nfunction track(target, key) {\\n    if (!activeEffect) return;\\n    // 将 activeEffect 收集到 target[key] 的依赖集合中\\n}\\n\\nfunction trigger(target, key) {\\n    // 执行 target[key] 的所有依赖\\n}\\n\\nfunction effect(fn) {\\n    activeEffect = fn;\\n    fn();\\n    activeEffect = null;\\n}`
+                    answer: `let activeEffect = null;\n\nfunction reactive(target) {\n    return new Proxy(target, {\n        get(obj, key) {\n            track(obj, key);\n            return obj[key];\n        },\n        set(obj, key, value) {\n            obj[key] = value;\n            trigger(obj, key);\n            return true;\n        }\n    });\n}\n\nfunction track(target, key) {\n    if (!activeEffect) return;\n    // 将 activeEffect 收集到 target[key] 的依赖集合中\n}\n\nfunction trigger(target, key) {\n    // 执行 target[key] 的所有依赖\n}\n\nfunction effect(fn) {\n    activeEffect = fn;\n    fn();\n    activeEffect = null;\n}`
                 },
                 choice: {
                     question: 'Vue3 的 Proxy 相比 Vue2 的 defineProperty，以下哪个说法错误？',
@@ -802,7 +788,7 @@ html_part2 = '''
                 write: {
                     desc: 'Vite 为什么比 Webpack 快？其预构建（pre-bundle）的作用是什么？',
                     hint: 'ESM vs Bundle、esbuild、依赖缓存',
-                    answer: `// Vite 快的原因：\\n1. 开发环境基于原生 ESM，无需打包，按需编译\\n2. 使用 esbuild（Go 编写）预构建依赖，比 JS 快 10-100 倍\\n3. 利用浏览器缓存，模块级 HMR\\n\\n// 预构建（pre-bundle）的作用：\\n1. 将 CommonJS 依赖转换为 ESM\\n2. 减少模块数量（如 lodash 数百个模块合并为几个）\\n3. 缓存到 node_modules/.vite，加速后续启动`
+                    answer: `// Vite 快的原因：\n1. 开发环境基于原生 ESM，无需打包，按需编译\n2. 使用 esbuild（Go 编写）预构建依赖，比 JS 快 10-100 倍\n3. 利用浏览器缓存，模块级 HMR\n\n// 预构建（pre-bundle）的作用：\n1. 将 CommonJS 依赖转换为 ESM\n2. 减少模块数量（如 lodash 数百个模块合并为几个）\n3. 缓存到 node_modules/.vite，加速后续启动`
                 },
                 choice: {
                     question: '以下哪个是 Plugin 的典型应用场景？',
@@ -821,7 +807,7 @@ html_part2 = '''
                 id: 13,
                 category: 'handwrite',
                 question: '手写深拷贝（处理循环引用）。',
-                answer: `<div class="space-y-3 text-sm"><div class="code-block mono text-xs">function deepClone(obj, map = new WeakMap()) {\\n    if (obj === null || typeof obj !== 'object') return obj;\\n    if (obj instanceof Date) return new Date(obj);\\n    if (obj instanceof RegExp) return new RegExp(obj);\\n    if (obj instanceof Map) return new Map(Array.from(obj, ([k, v]) => [k, deepClone(v, map)]));\\n    if (obj instanceof Set) return new Set(Array.from(obj, v => deepClone(v, map)));\\n    \\n    if (map.has(obj)) return map.get(obj); // 处理循环引用\\n    \\n    const clone = Array.isArray(obj) ? [] : {};\\n    map.set(obj, clone);\\n    \\n    for (let key in obj) {\\n        if (obj.hasOwnProperty(key)) {\\n            clone[key] = deepClone(obj[key], map);\\n        }\\n    }\\n    \\n    return clone;\\n}</div><p><strong class="text-blue-300">关键点：</strong>WeakMap 存储已拷贝对象、处理特殊对象、递归拷贝。</p></div>`,
+                answer: `<div class="space-y-3 text-sm"><div class="code-block mono text-xs">function deepClone(obj, map = new WeakMap()) {\n    if (obj === null || typeof obj !== 'object') return obj;\n    if (obj instanceof Date) return new Date(obj);\n    if (obj instanceof RegExp) return new RegExp(obj);\n    if (obj instanceof Map) return new Map(Array.from(obj, ([k, v]) => [k, deepClone(v, map)]));\n    if (obj instanceof Set) return new Set(Array.from(obj, v => deepClone(v, map)));\n    \n    if (map.has(obj)) return map.get(obj); // 处理循环引用\n    \n    const clone = Array.isArray(obj) ? [] : {};\n    map.set(obj, clone);\n    \n    for (let key in obj) {\n        if (obj.hasOwnProperty(key)) {\n            clone[key] = deepClone(obj[key], map);\n        }\n    }\n    \n    return clone;\n}</div><p><strong class="text-blue-300">关键点：</strong>WeakMap 存储已拷贝对象、处理特殊对象、递归拷贝。</p></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: '深拷贝处理循环引用需要使用' },
@@ -837,7 +823,7 @@ html_part2 = '''
                 write: {
                     desc: '请手写一个支持循环引用的深拷贝函数。',
                     hint: 'WeakMap + 递归 + 特殊对象处理',
-                    answer: `function deepClone(obj, map = new WeakMap()) {\\n    if (obj === null || typeof obj !== 'object') return obj;\\n    if (obj instanceof Date) return new Date(obj);\\n    if (obj instanceof RegExp) return new RegExp(obj);\\n    \\n    if (map.has(obj)) return map.get(obj);\\n    \\n    const clone = Array.isArray(obj) ? [] : {};\\n    map.set(obj, clone);\\n    \\n    for (let key in obj) {\\n        if (obj.hasOwnProperty(key)) {\\n            clone[key] = deepClone(obj[key], map);\\n        }\\n    }\\n    return clone;\\n}`
+                    answer: `function deepClone(obj, map = new WeakMap()) {\n    if (obj === null || typeof obj !== 'object') return obj;\n    if (obj instanceof Date) return new Date(obj);\n    if (obj instanceof RegExp) return new RegExp(obj);\n    \n    if (map.has(obj)) return map.get(obj);\n    \n    const clone = Array.isArray(obj) ? [] : {};\n    map.set(obj, clone);\n    \n    for (let key in obj) {\n        if (obj.hasOwnProperty(key)) {\n            clone[key] = deepClone(obj[key], map);\n        }\n    }\n    return clone;\n}`
                 },
                 choice: {
                     question: '深拷贝中为什么使用 WeakMap 而不是 Map 来存储已拷贝对象？',
@@ -856,7 +842,7 @@ html_part2 = '''
                 id: 14,
                 category: 'handwrite',
                 question: '手写 LRU 缓存。',
-                answer: `<div class="space-y-3 text-sm"><div class="code-block mono text-xs">class LRUCache {\\n    constructor(capacity) {\\n        this.capacity = capacity;\\n        this.cache = new Map(); // Map 保持插入顺序\\n    }\\n    \\n    get(key) {\\n        if (!this.cache.has(key)) return -1;\\n        const value = this.cache.get(key);\\n        this.cache.delete(key);\\n        this.cache.set(key, value); // 移到末尾（最新）\\n        return value;\\n    }\\n    \\n    put(key, value) {\\n        if (this.cache.has(key)) {\\n            this.cache.delete(key);\\n        } else if (this.cache.size >= this.capacity) {\\n            const firstKey = this.cache.keys().next().value;\\n            this.cache.delete(firstKey); // 删除最久未使用\\n        }\\n        this.cache.set(key, value);\\n    }\\n}</div><p><strong class="text-blue-300">核心：</strong>利用 Map 的迭代顺序特性，get 时先 delete 再 set 将其移到末尾（最新），超出容量时删除第一个（最旧）。</p></div>`,
+                answer: `<div class="space-y-3 text-sm"><div class="code-block mono text-xs">class LRUCache {\n    constructor(capacity) {\n        this.capacity = capacity;\n        this.cache = new Map(); // Map 保持插入顺序\n    }\n    \n    get(key) {\n        if (!this.cache.has(key)) return -1;\n        const value = this.cache.get(key);\n        this.cache.delete(key);\n        this.cache.set(key, value); // 移到末尾（最新）\n        return value;\n    }\n    \n    put(key, value) {\n        if (this.cache.has(key)) {\n            this.cache.delete(key);\n        } else if (this.cache.size >= this.capacity) {\n            const firstKey = this.cache.keys().next().value;\n            this.cache.delete(firstKey); // 删除最久未使用\n        }\n        this.cache.set(key, value);\n    }\n}</div><p><strong class="text-blue-300">核心：</strong>利用 Map 的迭代顺序特性，get 时先 delete 再 set 将其移到末尾（最新），超出容量时删除第一个（最旧）。</p></div>`,
                 fill: {
                     text: [
                         { type: 'text', content: 'LRU 缓存使用' },
@@ -874,7 +860,7 @@ html_part2 = '''
                 write: {
                     desc: '请使用 Map 手写一个 LRU 缓存，支持 get 和 put 操作。',
                     hint: 'Map 的顺序特性 + O(1) 操作',
-                    answer: `class LRUCache {\\n    constructor(capacity) {\\n        this.capacity = capacity;\\n        this.cache = new Map();\\n    }\\n    \\n    get(key) {\\n        if (!this.cache.has(key)) return -1;\\n        const val = this.cache.get(key);\\n        this.cache.delete(key);\\n        this.cache.set(key, val);\\n        return val;\\n    }\\n    \\n    put(key, value) {\\n        if (this.cache.has(key)) this.cache.delete(key);\\n        else if (this.cache.size >= this.capacity) {\\n            const oldest = this.cache.keys().next().value;\\n            this.cache.delete(oldest);\\n        }\\n        this.cache.set(key, value);\\n    }\\n}`
+                    answer: `class LRUCache {\n    constructor(capacity) {\n        this.capacity = capacity;\n        this.cache = new Map();\n    }\n    \n    get(key) {\n        if (!this.cache.has(key)) return -1;\n        const val = this.cache.get(key);\n        this.cache.delete(key);\n        this.cache.set(key, val);\n        return val;\n    }\n    \n    put(key, value) {\n        if (this.cache.has(key)) this.cache.delete(key);\n        else if (this.cache.size >= this.capacity) {\n            const oldest = this.cache.keys().next().value;\n            this.cache.delete(oldest);\n        }\n        this.cache.set(key, value);\n    }\n}`
                 },
                 choice: {
                     question: 'LRU 缓存中，Map 相比普通对象的优势是？',
@@ -890,16 +876,7 @@ html_part2 = '''
                 hint: 'Map vs Object 的顺序特性'
             }
         ];
-'''
 
-with open('/mnt/agents/output/index_part2.html', 'w', encoding='utf-8') as f:
-    f.write(html_part2)
-
-print("Part 2 saved successfully")
-print(f"Length: {len(html_part2)} characters")
-
-# Continue with the core logic functions
-html_part3 = '''
         // ==================== State ====================
         let currentMode = 'flip';
         let currentCategory = 'all';
@@ -909,7 +886,7 @@ html_part3 = '''
         let currentSpeech = null;
         let masteredCards = new Set(JSON.parse(localStorage.getItem('masteredCards') || '[]'));
         let cardHistory = JSON.parse(localStorage.getItem('cardHistory') || '{}');
-        
+
         const filteredCards = () => currentCategory === 'all' 
             ? cards 
             : cards.filter(c => c.category === currentCategory);
@@ -932,42 +909,42 @@ html_part3 = '''
 
         function speakText(text) {
             if (!ttsEnabled || !text) return;
-            
+
             // Stop any ongoing speech
             stopSpeech();
-            
+
             // Clean text for speech (remove HTML tags, code blocks)
             const cleanText = text
                 .replace(/<[^>]*>/g, ' ')
-                .replace(/\\n/g, ' ')
-                .replace(/\\s+/g, ' ')
+                .replace(/\n/g, ' ')
+                .replace(/\s+/g, ' ')
                 .replace(/[{}();]/g, ' ')
                 .trim();
-            
+
             if (!cleanText) return;
-            
+
             const utterance = new SpeechSynthesisUtterance(cleanText);
             utterance.lang = 'zh-CN';
             utterance.rate = 0.9;
             utterance.pitch = 1;
             utterance.volume = 1;
-            
+
             utterance.onstart = () => {
                 document.querySelectorAll('.tts-btn').forEach(btn => {
                     if (btn._speechText === cleanText) btn.classList.add('speaking');
                 });
             };
-            
+
             utterance.onend = () => {
                 document.querySelectorAll('.tts-btn').forEach(btn => btn.classList.remove('speaking'));
                 currentSpeech = null;
             };
-            
+
             utterance.onerror = () => {
                 document.querySelectorAll('.tts-btn').forEach(btn => btn.classList.remove('speaking'));
                 currentSpeech = null;
             };
-            
+
             currentSpeech = utterance;
             speechSynthesis.speak(utterance);
         }
@@ -994,7 +971,7 @@ html_part3 = '''
         function speakFillQuestion() {
             const card = filteredCards()[currentIndex % filteredCards().length];
             if (!card || !card.fill) return;
-            
+
             let text = '';
             card.fill.text.forEach(item => {
                 if (item.type === 'text') {
@@ -1026,7 +1003,7 @@ html_part3 = '''
             const nav = document.getElementById('categoryNav');
             const allCount = cards.length;
             const allMastered = cards.filter(c => masteredCards.has(c.id)).length;
-            
+
             nav.innerHTML = `
                 <button onclick="setCategory('all')" class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors mb-1 ${currentCategory === 'all' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-600'}" data-cat="all">
                     <div class="flex items-center justify-between">
@@ -1035,7 +1012,7 @@ html_part3 = '''
                     </div>
                 </button>
             `;
-            
+
             categories.forEach(cat => {
                 const mastered = cards.filter(c => c.category === cat.id && masteredCards.has(c.id)).length;
                 nav.innerHTML += `
@@ -1067,16 +1044,16 @@ html_part3 = '''
             const mastered = filtered.filter(c => masteredCards.has(c.id)).length;
             const totalAll = cards.length;
             const masteredAll = cards.filter(c => masteredCards.has(c.id)).length;
-            
+
             document.getElementById('statTotal').textContent = total;
             document.getElementById('statMastered').textContent = mastered;
-            
+
             const historyEntries = Object.values(cardHistory);
             const accuracy = historyEntries.length > 0 
                 ? Math.round((historyEntries.filter(h => h.correct).length / historyEntries.length) * 100)
                 : 0;
             document.getElementById('statAccuracy').textContent = accuracy + '%';
-            
+
             const progress = totalAll > 0 ? (masteredAll / totalAll) * 100 : 0;
             document.getElementById('totalProgress').style.width = progress + '%';
             document.getElementById('progressText').textContent = `${masteredAll}/${totalAll}`;
@@ -1086,7 +1063,7 @@ html_part3 = '''
         // ==================== Mode Switching ====================
         function setMode(mode) {
             currentMode = mode;
-            
+
             // Update desktop buttons
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 if (btn.dataset.mode === mode) {
@@ -1097,7 +1074,7 @@ html_part3 = '''
                     btn.classList.add('hover:bg-slate-50', 'text-slate-600');
                 }
             });
-            
+
             // Update mobile buttons
             document.querySelectorAll('.mode-btn-mobile').forEach(btn => {
                 if (btn.dataset.mode === mode) {
@@ -1108,10 +1085,10 @@ html_part3 = '''
                     btn.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-600');
                 }
             });
-            
+
             document.querySelectorAll('.mode-container').forEach(c => c.classList.add('hidden'));
             document.getElementById(mode + 'Container').classList.remove('hidden');
-            
+
             loadCard();
         }
 
@@ -1131,9 +1108,9 @@ html_part3 = '''
                 showEmptyState();
                 return;
             }
-            
+
             const card = filtered[currentIndex % filtered.length];
-            
+
             if (currentMode === 'flip') {
                 loadFlipCard(card);
             } else if (currentMode === 'fill') {
@@ -1172,7 +1149,7 @@ html_part3 = '''
             document.getElementById('flipAnswer').innerHTML = card.answer;
             document.getElementById('flipCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
             document.getElementById('flipCardInner').classList.remove('rotate-y-180');
-            
+
             // Auto speak if enabled
             if (ttsEnabled) {
                 setTimeout(() => speakText(card.question), 300);
@@ -1181,7 +1158,7 @@ html_part3 = '''
 
         function flipCard() {
             document.getElementById('flipCardInner').classList.toggle('rotate-y-180');
-            
+
             // Speak answer when flipped to back
             if (ttsEnabled && document.getElementById('flipCardInner').classList.contains('rotate-y-180')) {
                 setTimeout(() => speakAnswer(), 400);
@@ -1197,13 +1174,13 @@ html_part3 = '''
             const card = filteredCards()[currentIndex % filteredCards().length];
             masteredCards.add(card.id);
             localStorage.setItem('masteredCards', JSON.stringify([...masteredCards]));
-            
+
             streak++;
             updateStreak();
             updateStats();
             renderCategoryNav();
             createConfetti();
-            
+
             setTimeout(() => nextCard(), 500);
         }
 
@@ -1226,19 +1203,19 @@ html_part3 = '''
                 loadFillCard(filteredCards()[currentIndex % filteredCards().length]);
                 return;
             }
-            
+
             document.getElementById('fillCategory').textContent = getCategoryName(card.category);
             document.getElementById('fillCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
             document.getElementById('fillHintText').textContent = card.fill.hint;
-            
+
             document.getElementById('fillHint').classList.add('hidden');
             document.getElementById('fillResult').classList.add('hidden');
-            
+
             // Build fill content with structured blanks
             const contentDiv = document.getElementById('fillContent');
             contentDiv.innerHTML = '';
             currentFillBlanks = [];
-            
+
             let blankIndex = 0;
             card.fill.text.forEach((item, idx) => {
                 if (item.type === 'text') {
@@ -1249,12 +1226,12 @@ html_part3 = '''
                     blankIndex++;
                     const wrapper = document.createElement('span');
                     wrapper.className = 'blank-wrapper';
-                    
+
                     const label = document.createElement('div');
                     label.className = 'blank-label';
                     label.textContent = `空${blankIndex}`;
                     wrapper.appendChild(label);
-                    
+
                     const input = document.createElement('span');
                     input.className = 'fill-blank';
                     input.contentEditable = true;
@@ -1263,7 +1240,7 @@ html_part3 = '''
                     input.dataset.index = blankIndex - 1;
                     input.textContent = '';
                     input.setAttribute('placeholder', '？');
-                    
+
                     // Prevent newlines in blank
                     input.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
@@ -1274,20 +1251,20 @@ html_part3 = '''
                             else checkFill();
                         }
                     });
-                    
+
                     // Auto-check on blur if has content
                     input.addEventListener('blur', () => {
                         if (input.textContent.trim()) {
                             checkSingleBlank(input);
                         }
                     });
-                    
+
                     wrapper.appendChild(input);
                     contentDiv.appendChild(wrapper);
                     currentFillBlanks.push(input);
                 }
             });
-            
+
             // Auto speak if enabled
             if (ttsEnabled) {
                 setTimeout(() => speakFillQuestion(), 300);
@@ -1297,26 +1274,26 @@ html_part3 = '''
         function checkSingleBlank(input) {
             const answer = input.dataset.answer;
             const userAnswer = input.textContent.trim();
-            
+
             if (!userAnswer) return;
-            
+
             // Support multiple correct answers separated by |
             const correctAnswers = answer.split('|').map(a => a.trim());
             const isCorrect = correctAnswers.some(a => a === userAnswer);
-            
+
             input.classList.remove('correct', 'wrong', 'hint-revealed');
             if (isCorrect) {
                 input.classList.add('correct');
             } else {
                 input.classList.add('wrong');
             }
-            
+
             return isCorrect;
         }
 
         function showFillHint() {
             document.getElementById('fillHint').classList.remove('hidden');
-            
+
             // Also show hints for wrong blanks
             currentFillBlanks.forEach(blank => {
                 if (blank.classList.contains('wrong') || !blank.textContent.trim()) {
@@ -1336,11 +1313,11 @@ html_part3 = '''
                 blank.classList.add('correct');
                 blank.contentEditable = false;
             });
-            
+
             const resultBox = document.getElementById('fillResultBox');
             const resultTitle = document.getElementById('fillResultTitle');
             const resultText = document.getElementById('fillResultText');
-            
+
             document.getElementById('fillResult').classList.remove('hidden');
             resultBox.className = 'p-3 rounded-lg bg-amber-50 border border-amber-200';
             resultTitle.textContent = '👁️ 已显示答案';
@@ -1352,7 +1329,7 @@ html_part3 = '''
         function checkFill() {
             let allCorrect = true;
             let allFilled = true;
-            
+
             currentFillBlanks.forEach(blank => {
                 const userAnswer = blank.textContent.trim();
                 if (!userAnswer) {
@@ -1360,17 +1337,17 @@ html_part3 = '''
                     allCorrect = false;
                     return;
                 }
-                
+
                 const isCorrect = checkSingleBlank(blank);
                 if (!isCorrect) allCorrect = false;
             });
-            
+
             const resultBox = document.getElementById('fillResultBox');
             const resultTitle = document.getElementById('fillResultTitle');
             const resultText = document.getElementById('fillResultText');
-            
+
             document.getElementById('fillResult').classList.remove('hidden');
-            
+
             if (!allFilled) {
                 resultBox.className = 'p-3 rounded-lg bg-yellow-50 border border-yellow-200';
                 resultTitle.textContent = '⚠️ 还有未填写的空';
@@ -1379,22 +1356,22 @@ html_part3 = '''
                 resultText.className = 'text-xs text-yellow-700';
                 return;
             }
-            
+
             if (allCorrect) {
                 resultBox.className = 'p-3 rounded-lg bg-green-50 border border-green-200';
                 resultTitle.textContent = '✅ 全部正确！';
                 resultTitle.className = 'font-medium mb-1 text-green-800 text-sm';
                 resultText.textContent = '太棒了，继续下一张！';
                 resultText.className = 'text-xs text-green-700';
-                
+
                 streak++;
                 updateStreak();
                 recordHistory(filteredCards()[currentIndex % filteredCards().length].id, true);
                 createConfetti();
-                
+
                 // Disable all blanks
                 currentFillBlanks.forEach(blank => blank.contentEditable = false);
-                
+
                 setTimeout(() => nextFill(), 1500);
             } else {
                 resultBox.className = 'p-3 rounded-lg bg-red-50 border border-red-200';
@@ -1402,12 +1379,12 @@ html_part3 = '''
                 resultTitle.className = 'font-medium mb-1 text-red-800 text-sm';
                 resultText.textContent = '红色标注处答案不正确，点击提示按钮查看线索';
                 resultText.className = 'text-xs text-red-700';
-                
+
                 streak = 0;
                 updateStreak();
                 recordHistory(filteredCards()[currentIndex % filteredCards().length].id, false);
             }
-            
+
             updateStats();
         }
 
@@ -1423,18 +1400,18 @@ html_part3 = '''
                 loadWriteCard(filteredCards()[currentIndex % filteredCards().length]);
                 return;
             }
-            
+
             document.getElementById('writeCategory').textContent = getCategoryName(card.category);
             document.getElementById('writeCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
             document.getElementById('writeQuestion').textContent = card.question;
             document.getElementById('writeDescription').textContent = card.write.desc;
             document.getElementById('writeHintText').textContent = card.write.hint;
             document.getElementById('writeAnswer').textContent = card.write.answer;
-            
+
             document.getElementById('writeInput').value = '';
             document.getElementById('writeHint').classList.add('hidden');
             document.getElementById('writeResult').classList.add('hidden');
-            
+
             if (ttsEnabled) {
                 setTimeout(() => speakText(card.question + '。' + card.write.desc), 300);
             }
@@ -1459,7 +1436,7 @@ html_part3 = '''
             updateStreak();
             recordHistory(filteredCards()[currentIndex % filteredCards().length].id, true);
             updateStats();
-            
+
             if (ttsEnabled) {
                 setTimeout(() => speakText(document.getElementById('writeAnswer').textContent), 500);
             }
@@ -1479,14 +1456,14 @@ html_part3 = '''
                 loadChoiceCard(filteredCards()[currentIndex % filteredCards().length]);
                 return;
             }
-            
+
             document.getElementById('choiceCategory').textContent = getCategoryName(card.category);
             document.getElementById('choiceCounter').textContent = `${currentIndex + 1} / ${filteredCards().length}`;
-            document.getElementById('choiceQuestion').innerHTML = card.choice.question.replace(/\\n/g, '<br>');
-            
+            document.getElementById('choiceQuestion').innerHTML = card.choice.question.replace(/\n/g, '<br>');
+
             const optionsContainer = document.getElementById('choiceOptions');
             optionsContainer.innerHTML = '';
-            
+
             card.choice.options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'w-full text-left p-3.5 rounded-xl border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-slate-700 text-sm font-medium';
@@ -1494,10 +1471,10 @@ html_part3 = '''
                 btn.onclick = () => selectChoice(idx, btn);
                 optionsContainer.appendChild(btn);
             });
-            
+
             document.getElementById('choiceResult').classList.add('hidden');
             selectedChoice = null;
-            
+
             if (ttsEnabled) {
                 setTimeout(() => speakText(card.choice.question), 300);
             }
@@ -1506,10 +1483,10 @@ html_part3 = '''
         function selectChoice(index, btnElement) {
             if (selectedChoice !== null) return;
             selectedChoice = index;
-            
+
             const card = filteredCards()[currentIndex % filteredCards().length];
             const isCorrect = index === card.choice.correct;
-            
+
             document.querySelectorAll('#choiceOptions button').forEach((btn, idx) => {
                 btn.disabled = true;
                 if (idx === card.choice.correct) {
@@ -1522,10 +1499,10 @@ html_part3 = '''
                     btn.querySelector('span').classList.add('bg-red-200', 'text-red-800');
                 }
             });
-            
+
             const resultBox = document.getElementById('choiceResult');
             resultBox.classList.remove('hidden');
-            
+
             if (isCorrect) {
                 resultBox.className = 'mb-4 p-3 rounded-lg bg-green-50 border border-green-200';
                 document.getElementById('choiceResultTitle').textContent = '✅ 回答正确！';
@@ -1542,14 +1519,14 @@ html_part3 = '''
                 updateStreak();
                 recordHistory(card.id, false);
             }
-            
+
             document.getElementById('choiceResultText').innerHTML = `<strong>解析：</strong>${card.choice.explanation}`;
             document.getElementById('choiceResultText').className = 'text-xs text-slate-700';
-            
+
             if (ttsEnabled) {
                 speakText(isCorrect ? '回答正确！' + card.choice.explanation : '回答错误。' + card.choice.explanation);
             }
-            
+
             updateStats();
         }
 
@@ -1612,7 +1589,7 @@ html_part3 = '''
                     }
                     return;
                 }
-                
+
                 switch(e.key) {
                     case ' ':
                         e.preventDefault();
@@ -1667,27 +1644,3 @@ html_part3 = '''
     </script>
 </body>
 </html>
-'''
-
-with open('/mnt/agents/output/index_part3.html', 'w', encoding='utf-8') as f:
-    f.write(html_part3)
-
-print("Part 3 saved successfully")
-print(f"Length: {len(html_part3)} characters")
-
-# Combine all parts into a single file
-with open('/mnt/agents/output/index_part1.html', 'r', encoding='utf-8') as f:
-    part1 = f.read()
-with open('/mnt/agents/output/index_part2.html', 'r', encoding='utf-8') as f:
-    part2 = f.read()
-with open('/mnt/agents/output/index_part3.html', 'r', encoding='utf-8') as f:
-    part3 = f.read()
-
-full_html = part1 + part2 + part3
-
-with open('/mnt/agents/output/index.html', 'w', encoding='utf-8') as f:
-    f.write(full_html)
-
-print(f"Complete file saved: /mnt/agents/output/index.html")
-print(f"Total size: {len(full_html)} characters ({len(full_html) / 1024:.1f} KB)")
-print(f"Total lines: {full_html.count(chr(10))}")
